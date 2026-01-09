@@ -215,17 +215,20 @@ with col_save:
         st.success("Pressures saved successfully!")
 
 # --- COMMENT INPUT FOR LAST SAVED RECORD ---
-if st.session_state.get("last_saved_index") is not None:
-    df = pd.read_csv(REGISTER_FILE)
+if st.session_state["last_saved_index"] is not None:
+    df = load_register()
     idx = st.session_state["last_saved_index"]
-    comment = st.text_input(
-        "Add a comment for last record:",
-        value=df.at[idx, "Comment"]
-    )
-    if st.button("💬 Save Comment"):
-        df.at[idx, "Comment"] = comment
-        df.to_csv(REGISTER_FILE, index=False)
-        st.success("Comment saved!")
+
+    # Use a container so it doesn't disappear when Register toggles
+    comment_container = st.container()
+    with comment_container:
+        comment = st.text_input(
+            "Add a comment for last record:",
+            value=df.at[idx, "Comment"]
+        )
+        if st.button("💬 Save Comment", key="save_comment_btn"):
+            update_comment(idx, comment)
+            st.success("Comment saved!")
 
 # --- VIEW REGISTER BUTTON (TOGGLE) ---
 with col_view:
