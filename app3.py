@@ -376,7 +376,6 @@ html_layout = f"""
     text-align:center;">
     <strong>{jacket_id}</strong>
 </div>
-</div>
 """
 components.html(html_layout, height=420)
 
