@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 import pandas as pd
 from datetime import datetime
 import os
+import time
 
 # ----------------------------
 # PAGE CONFIG
@@ -154,7 +155,7 @@ st.caption("Le Treport OWF - DEME OFFSHORE")
 # ----------------------------
 # SELECTION
 # ----------------------------
-st.subheader("Jacket & Case")
+
 jacket_id = st.selectbox("Jacket ID", list(JACKETS.keys()))
 case = st.radio("Case", ["EAC", "OBS"], horizontal=True)
 min_targets = JACKETS[jacket_id][case]
@@ -182,6 +183,9 @@ col_save, col_view = st.columns(2)
 # Track last saved record in session state
 if "last_saved_index" not in st.session_state:
     st.session_state["last_saved_index"] = None
+
+if "can_delete_last" not in st.session_state:
+    st.session_state["can_delete_last"] = False
 
 # Placeholder for the register table
 if "register_placeholder" not in st.session_state:
@@ -212,7 +216,11 @@ with col_save:
 
         df.to_csv(REGISTER_FILE, index=False)
         st.session_state["last_saved_index"] = len(df) - 1
-        st.success("Pressures saved successfully!")
+        st.session_state["can_delete_last"] = True   
+        msg = st.empty()
+        msg.success("Pressures saved successfully!")
+        time.sleep(1)
+        msg.empty()
 
 # --- COMMENT INPUT FOR LAST SAVED RECORD ---
 if st.session_state.get("last_saved_index") is not None:
@@ -225,18 +233,24 @@ if st.session_state.get("last_saved_index") is not None:
     if st.button("💬 Save Comment"):
         df.at[idx, "Comment"] = comment
         df.to_csv(REGISTER_FILE, index=False)
-        st.success("Comment saved!")
+        msg = st.empty()
+        msg.success("Comment saved!")
+        time.sleep(1)
+        msg.empty()
 
-# --- VIEW REGISTER BUTTON (TOGGLE) ---
+# ----------------------------
+# REGISTER DISPLAY AND DELETE
+# ----------------------------
+placeholder = st.session_state.get("register_placeholder", st.empty())
+
+# Toggle register visibility
 with col_view:
     if st.button("📋 Register", use_container_width=True):
         st.session_state["show_register"] = not st.session_state.get("show_register", False)
 
-# --- DISPLAY REGISTER INSIDE PLACEHOLDER ---
+# Load CSV if register is visible
 if st.session_state.get("show_register", False):
-    df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
-
-    placeholder = st.session_state["register_placeholder"]
+    df = load_register()  # Always load the CSV, even on fresh start
     placeholder.subheader("Pressure Register")
 
     if df.empty:
@@ -244,26 +258,31 @@ if st.session_state.get("show_register", False):
     else:
         placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
-        # --- DELETE LAST MEASUREMENT BUTTON ---
+    # --- DELETE LAST MEASUREMENT BUTTON ---
+    # Only show delete button if user saved a new record this session
+    if st.session_state.get("can_delete_last", False) and not df.empty:
         if st.button("🗑️ Delete Last Measurement"):
-            if not df.empty:
-                df = df.iloc[:-1]  # Remove last row
-                df.to_csv(REGISTER_FILE, index=False)
+            df = df.iloc[:-1]  # Remove last row
+            df.to_csv(REGISTER_FILE, index=False)
 
-                # Update last_saved_index if needed
-                if st.session_state.get("last_saved_index") is not None:
-                    if st.session_state["last_saved_index"] >= len(df):
-                        st.session_state["last_saved_index"] = None
+            # Disable further deletion until next save
+            st.session_state["last_saved_index"] = None
+            st.session_state["can_delete_last"] = False
 
-                st.success("Last measurement deleted successfully!")
+            # Flash message
+            msg = st.empty()
+            msg.success("Last measurement deleted successfully!")
+            time.sleep(1)
+            msg.empty()
 
-                # Refresh the table in the same placeholder
-                df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
-                placeholder.empty()
-                if df.empty:
-                    placeholder.info("No records available.")
-                else:
-                    placeholder.dataframe(df, use_container_width=True, hide_index=True)
+            # Refresh placeholder table
+            df = load_register()
+            placeholder.empty()
+            placeholder.subheader("Pressure Register")
+            if df.empty:
+                placeholder.info("No records available.")
+            else:
+                placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
 # ----------------------------
 # CALCULATIONS
