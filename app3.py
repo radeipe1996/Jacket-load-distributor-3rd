@@ -226,7 +226,15 @@ with col_view:
 # --- DISPLAY REGISTER ---
 if st.session_state.get("show_register", False):
     st.subheader("Pressure Register")
-    df = pd.read_csv(REGISTER_FILE)
+
+    # Load the register into session state if not already loaded
+    if "register_df" not in st.session_state:
+        if os.path.exists(REGISTER_FILE):
+            st.session_state["register_df"] = pd.read_csv(REGISTER_FILE)
+        else:
+            st.session_state["register_df"] = pd.DataFrame()
+
+    df = st.session_state["register_df"]
 
     if df.empty:
         st.info("No records available.")
@@ -236,12 +244,11 @@ if st.session_state.get("show_register", False):
         # --- DELETE LAST MEASUREMENT BUTTON ---
         if st.button("🗑️ Delete Last Measurement"):
             if not df.empty:
-                df = df.iloc[:-1]  # remove last row
+                # Remove last row
+                df = df.iloc[:-1]
+                st.session_state["register_df"] = df  # Update session state
                 df.to_csv(REGISTER_FILE, index=False)
                 st.success("Last measurement deleted successfully!")
-                
-                # Update the dataframe in place so it reflects immediately
-                st.dataframe(df, use_container_width=True, hide_index=True)
 # ----------------------------
 # CALCULATIONS
 # ----------------------------
