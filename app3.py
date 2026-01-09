@@ -175,6 +175,20 @@ with col2:
 pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
 
 # ----------------------------
+# CALCULATIONS
+# ----------------------------
+total_pressure = sum(pressures.values())
+if total_pressure > 0:
+    percentages = {k: (v / total_pressure) * 100 for k, v in pressures.items()}
+else:
+    percentages = {k: 0 for k in pressures}
+
+# ----------------------------
+# RESULTS
+# ----------------------------
+st.metric("Total Pressure (bar)", f"{total_pressure:.2f}")
+
+# ----------------------------
 # DATA LOGGING (IMMEDIATELY BELOW INPUT)
 # ----------------------------
 st.subheader("Data Logging")
@@ -283,21 +297,6 @@ if st.session_state.get("show_register", False):
                 placeholder.info("No records available.")
             else:
                 placeholder.dataframe(df, use_container_width=True, hide_index=True)
-
-# ----------------------------
-# CALCULATIONS
-# ----------------------------
-total_pressure = sum(pressures.values())
-if total_pressure > 0:
-    percentages = {k: (v / total_pressure) * 100 for k, v in pressures.items()}
-else:
-    percentages = {k: 0 for k in pressures}
-
-# ----------------------------
-# RESULTS
-# ----------------------------
-st.subheader("Results")
-st.metric("Total Pressure (bar)", f"{total_pressure:.2f}")
 
 # ----------------------------
 # VISUALIZATION
