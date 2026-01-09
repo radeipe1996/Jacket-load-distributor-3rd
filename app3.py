@@ -235,15 +235,12 @@ if st.session_state.get("show_register", False):
 
         # --- DELETE LAST MEASUREMENT BUTTON ---
         if st.button("🗑️ Delete Last Measurement"):
-            # Reload CSV to avoid stale data
-            df = pd.read_csv(REGISTER_FILE)
-
             if not df.empty:
                 df = df.iloc[:-1]  # remove last row
                 df.to_csv(REGISTER_FILE, index=False)
                 st.success("Last measurement deleted successfully!")
-
-                # Force display to update with new CSV
+                
+                # Force app to rerun so top display updates
                 st.experimental_rerun()
 # ----------------------------
 # CALCULATIONS
