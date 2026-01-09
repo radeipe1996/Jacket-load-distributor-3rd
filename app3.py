@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 import pandas as pd
 from datetime import datetime
 import os
+import time
 
 # ----------------------------
 # PAGE CONFIG
@@ -212,7 +213,10 @@ with col_save:
 
         df.to_csv(REGISTER_FILE, index=False)
         st.session_state["last_saved_index"] = len(df) - 1
-        st.success("Pressures saved successfully!")
+        msg = st.empty()
+        msg.success("Pressures saved successfully!")
+        time.sleep(2)
+        msg.empty()
 
 # --- COMMENT INPUT FOR LAST SAVED RECORD ---
 if st.session_state.get("last_saved_index") is not None:
@@ -225,7 +229,10 @@ if st.session_state.get("last_saved_index") is not None:
     if st.button("💬 Save Comment"):
         df.at[idx, "Comment"] = comment
         df.to_csv(REGISTER_FILE, index=False)
-        st.success("Comment saved!")
+        msg = st.empty()
+        msg.success("Comment saved!")
+        time.sleep(2)
+        msg.empty()
 
 # --- VIEW REGISTER BUTTON (TOGGLE) ---
 with col_view:
@@ -255,7 +262,10 @@ if st.session_state.get("show_register", False):
                     if st.session_state["last_saved_index"] >= len(df):
                         st.session_state["last_saved_index"] = None
 
-                st.success("Last measurement deleted successfully!")
+                msg = st.empty()
+                msg.success("Last measurement deleted successfully!")
+                time.sleep(2)
+                msg.empty())
 
                 # Refresh the table in the same placeholder
                 df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
