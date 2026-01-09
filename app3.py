@@ -8,7 +8,7 @@ import os
 # PAGE CONFIG
 # ----------------------------
 st.set_page_config(
-    page_title="JKT Load Distribution",
+    page_title="Jacket Load Distribution",
     layout="centered"
 )
 
@@ -148,7 +148,7 @@ def leg_box(label, value, minimum):
 # ----------------------------
 # HEADER
 # ----------------------------
-st.title("⚖️ Jacket Load Distribution")
+st.title("⚖️ JKT Load Distribution")
 st.caption("Le Treport OWF - DEME OFFSHORE")
 
 # ----------------------------
