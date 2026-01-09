@@ -12,6 +12,12 @@ st.set_page_config(
     layout="centered"
 )
 
+if "show_register" not in st.session_state:
+    st.session_state["show_register"] = False
+
+if "delete_last" not in st.session_state:
+    st.session_state["delete_last"] = False
+    
 # ----------------------------
 # DATA
 # ----------------------------
@@ -220,27 +226,42 @@ if st.session_state.get("last_saved_index") is not None:
 # --- VIEW REGISTER BUTTON (TOGGLE) ---
 with col_view:
     if st.button("📋 Register", use_container_width=True):
-        # Toggle the boolean
-        st.session_state["show_register"] = not st.session_state.get("show_register", False)
+        st.session_state["show_register"] = not st.session_state["show_register"]
 
 # --- DISPLAY REGISTER AND DELETE BUTTON ---
 if st.session_state.get("show_register", False):
     st.subheader("Pressure Register")
-    df = pd.read_csv(REGISTER_FILE)
-    
+
+    # Load the current register
+    df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+
     if df.empty:
         st.info("No records available.")
     else:
-        # Show the dataframe
         st.dataframe(df, use_container_width=True, hide_index=True)
-        
-        # Delete Last Measurement button
+
+        # Delete Last Measurement Button
         if st.button("🗑️ Delete Last Measurement"):
             if not df.empty:
-                df = df.iloc[:-1]  # remove last row
+                df = df.iloc[:-1]  # Remove last row
                 df.to_csv(REGISTER_FILE, index=False)
+
+                # Reset last_saved_index if last row was deleted
+                if st.session_state.get("last_saved_index") is not None:
+                    if st.session_state["last_saved_index"] >= len(df):
+                        st.session_state["last_saved_index"] = None
+
                 st.success("Last measurement deleted successfully!")
-                st.experimental_rerun()  # Reloads the app to refresh the table
+
+                # Force session to reload the table
+                st.session_state["delete_last"] = True
+
+    # If a deletion just happened, reload the register
+    if st.session_state.get("delete_last", False):
+        st.session_state["delete_last"] = False
+        df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+        if not df.empty:
+            st.dataframe(df, use_container_width=True, hide_index=True)
 
 # ----------------------------
 # CALCULATIONS
