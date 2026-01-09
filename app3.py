@@ -102,7 +102,7 @@ LEG_LABELS = {
 from datetime import datetime, timezone
 
 def save_pressures(jacket_id, case, pressures):
-    now = datetime.now().strftime("%d/%m/%y %H:%M:%S")
+    now = datetime.now(timezone.utc).strftime("%d/%m/%y %H:%M:%S")
 
     new_row = {
         "Jacket ID": jacket_id,
@@ -115,13 +115,11 @@ def save_pressures(jacket_id, case, pressures):
         "Comment": ""
     }
 
-    if os.path.exists(REGISTER_FILE):
-        df = pd.read_csv(REGISTER_FILE)
-        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    else:
-        df = pd.DataFrame([new_row])
-
+    df = load_register()
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     df.to_csv(REGISTER_FILE, index=False)
+
+    # return index so UI can attach a comment
     return len(df) - 1
 
 def load_register():
@@ -191,33 +189,14 @@ if "register_placeholder" not in st.session_state:
 # --- SAVE PRESSURES BUTTON ---
 with col_save:
     if st.button("💾 Save Pressures", use_container_width=True):
-        # ✅ TRUE UTC TIME
-        now = datetime.now(timezone.utc).strftime("%d/%m/%y %H:%M:%S")
+        idx = save_pressures(jacket_id, case, pressures)
+        st.session_state["last_saved_index"] = idx
 
-        new_row = {
-            "Jacket ID": jacket_id,
-            "Case": case,
-            "Date Time (UTC)": now,   # ✅ CORRECT HEADER
-            "BP (A)": pressures["A"],
-            "BQ (B)": pressures["B"],
-            "AQ (C)": pressures["C"],
-            "AP (D)": pressures["D"],
-            "Comment": ""
-        }
-
-        if os.path.exists(REGISTER_FILE):
-            df = pd.read_csv(REGISTER_FILE)
-            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-        else:
-            df = pd.DataFrame([new_row])
-
-        df.to_csv(REGISTER_FILE, index=False)
-        st.session_state["last_saved_index"] = len(df) - 1
         msg = st.empty()
         msg.success("Pressures saved successfully!")
         time.sleep(2)
         msg.empty()
-
+        
 # --- COMMENT INPUT FOR LAST SAVED RECORD ---
 if st.session_state.get("last_saved_index") is not None:
     df = pd.read_csv(REGISTER_FILE)
