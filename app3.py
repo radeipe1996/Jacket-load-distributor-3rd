@@ -216,7 +216,7 @@ with col_save:
         msg = st.empty()
         msg.success("Pressures saved successfully!")
         time.sleep(1)
-        msg.empty())
+        msg.empty()
 
 # --- COMMENT INPUT FOR LAST SAVED RECORD ---
 if st.session_state.get("last_saved_index") is not None:
