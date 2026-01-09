@@ -183,6 +183,10 @@ col_save, col_view = st.columns(2)
 if "last_saved_index" not in st.session_state:
     st.session_state["last_saved_index"] = None
 
+# Placeholder for the register table
+if "register_placeholder" not in st.session_state:
+    st.session_state["register_placeholder"] = st.empty()
+
 # --- SAVE PRESSURES BUTTON ---
 with col_save:
     if st.button("💾 Save Pressures", use_container_width=True):
@@ -226,42 +230,41 @@ if st.session_state.get("last_saved_index") is not None:
 # --- VIEW REGISTER BUTTON (TOGGLE) ---
 with col_view:
     if st.button("📋 Register", use_container_width=True):
-        st.session_state["show_register"] = not st.session_state["show_register"]
+        st.session_state["show_register"] = not st.session_state.get("show_register", False)
 
-# --- DISPLAY REGISTER AND DELETE BUTTON ---
+# --- DISPLAY REGISTER INSIDE PLACEHOLDER ---
 if st.session_state.get("show_register", False):
-    st.subheader("Pressure Register")
-
-    # Load the current register
     df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
 
-    if df.empty:
-        st.info("No records available.")
-    else:
-        st.dataframe(df, use_container_width=True, hide_index=True)
-
-        # Delete Last Measurement Button
-        if st.button("🗑️ Delete Last Measurement"):
-            if not df.empty:
-                df = df.iloc[:-1]  # Remove last row
-                df.to_csv(REGISTER_FILE, index=False)
-
-                # Reset last_saved_index if last row was deleted
-                if st.session_state.get("last_saved_index") is not None:
-                    if st.session_state["last_saved_index"] >= len(df):
-                        st.session_state["last_saved_index"] = None
-
-                st.success("Last measurement deleted successfully!")
-
-                # Force session to reload the table
-                st.session_state["delete_last"] = True
-
-    # If a deletion just happened, reload the register
-    if st.session_state.get("delete_last", False):
-        st.session_state["delete_last"] = False
-        df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
-        if not df.empty:
+    with st.session_state["register_placeholder"]:
+        st.subheader("Pressure Register")
+        if df.empty:
+            st.info("No records available.")
+        else:
             st.dataframe(df, use_container_width=True, hide_index=True)
+
+            # --- DELETE LAST MEASUREMENT BUTTON ---
+            if st.button("🗑️ Delete Last Measurement"):
+                if not df.empty:
+                    df = df.iloc[:-1]  # Remove last row
+                    df.to_csv(REGISTER_FILE, index=False)
+
+                    # Update last_saved_index if needed
+                    if st.session_state.get("last_saved_index") is not None:
+                        if st.session_state["last_saved_index"] >= len(df):
+                            st.session_state["last_saved_index"] = None
+
+                    st.success("Last measurement deleted successfully!")
+
+                    # Refresh the table in the same container
+                    df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+                    st.session_state["register_placeholder"].empty()
+                    with st.session_state["register_placeholder"]:
+                        st.subheader("Pressure Register")
+                        if df.empty:
+                            st.info("No records available.")
+                        else:
+                            st.dataframe(df, use_container_width=True, hide_index=True)
 
 # ----------------------------
 # CALCULATIONS
