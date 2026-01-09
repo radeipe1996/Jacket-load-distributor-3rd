@@ -397,8 +397,7 @@ else:
 # ----------------------------
 # HINT BUTTON
 # ----------------------------
-st.subheader("💡 Hint")
-if st.button("Show Theoretical Stroke"):
+if st.button("💡 Hint"):
     stroke = THEORETICAL_STROKE.get(jacket_id, None)
     if stroke:
         st.info(
