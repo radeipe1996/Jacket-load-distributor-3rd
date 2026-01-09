@@ -250,7 +250,7 @@ with col_view:
 
 # Load CSV if register is visible
 if st.session_state.get("show_register", False):
-    df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+    df = load_register()
     placeholder.subheader("Pressure Register")
 
     if df.empty:
@@ -276,14 +276,13 @@ if st.session_state.get("show_register", False):
             msg.empty()
 
             # Refresh placeholder table
-            df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+            df = load_register()
             placeholder.empty()
             placeholder.subheader("Pressure Register")
             if df.empty:
                 placeholder.info("No records available.")
             else:
                 placeholder.dataframe(df, use_container_width=True, hide_index=True)
-
 
 # ----------------------------
 # CALCULATIONS
