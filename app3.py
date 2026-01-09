@@ -302,41 +302,45 @@ if st.session_state.get("show_register", False):
 # VISUALIZATION
 # ----------------------------
 st.subheader("Jacket Visualization")
+
 html_layout = f"""
 <div style="max-width:360px;margin:auto;font-family:Arial;">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
 
-    <div style="display:flex;align-items:center;gap:8px;">
-        <div style="
-            background-color:#7f8c8d;
-            color:white;
-            padding:4px;
-            border-radius:6px;
-            font-size:11px;
-            width:34px;
-            height:34px;
-            display:flex;
-            align-items:center;
-            justify-content:center;">
-            BL
-        </div>
-        {leg_box("BP (A)", percentages["A"], min_targets["A"])}
+    <!-- Jacket ID at the top -->
+    <div style="
+        margin-bottom:14px;
+        background-color:#34495e;
+        color:white;
+        padding:12px;
+        border-radius:12px;
+        text-align:center;">
+        <strong>{jacket_id}</strong>
     </div>
 
-    {leg_box("BQ (B)", percentages["B"], min_targets["B"])}
-    {leg_box("AP (D)", percentages["D"], min_targets["D"])}
-    {leg_box("AQ (C)", percentages["C"], min_targets["C"])}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
 
-</div>
-<div style="
-    margin-top:14px;
-    background-color:#34495e;
-    color:white;
-    padding:12px;
-    border-radius:12px;
-    text-align:center;">
-    <strong>{jacket_id}</strong>
-</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <div style="
+                background-color:#7f8c8d;
+                color:white;
+                padding:4px;
+                border-radius:6px;
+                font-size:11px;
+                width:34px;
+                height:34px;
+                display:flex;
+                align-items:center;
+                justify-content:center;">
+                BL
+            </div>
+            {leg_box("BP (A)", percentages["A"], min_targets["A"])}
+        </div>
+
+        {leg_box("BQ (B)", percentages["B"], min_targets["B"])}
+        {leg_box("AP (D)", percentages["D"], min_targets["D"])}
+        {leg_box("AQ (C)", percentages["C"], min_targets["C"])}
+
+    </div>
 </div>
 """
 components.html(html_layout, height=330)
