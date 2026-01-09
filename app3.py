@@ -261,6 +261,9 @@ pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
 st.subheader("Data Logging")
 col_save, col_view = st.columns(2)
 
+# Placeholder right below buttons
+register_container = st.container()
+
 # --- SAVE PRESSURES BUTTON ---
 with col_save:
     if st.button("💾 Save Pressures", use_container_width=True):
@@ -269,44 +272,22 @@ with col_save:
         st.session_state["last_comment"] = ""
         st.success("Pressures saved successfully!")
 
-# --- COMMENT INPUT FOR LAST SAVED RECORD ---
-if st.session_state["last_saved_index"] is not None:
-    idx = st.session_state["last_saved_index"]
-    df = load_register()
-    
-    # Initialize last_comment if empty
-    if st.session_state["last_comment"] == "" and not df.empty:
-        st.session_state["last_comment"] = df.at[idx, "Comment"]
-
-    comment_container = st.container()
-    with comment_container:
-        comment = st.text_input(
-            "Add a comment for last record:",
-            value=st.session_state["last_comment"],
-            key="comment_input"
-        )
-        if st.button("💬 Save Comment", key="save_comment_btn"):
-            update_comment(idx, comment)
-            st.success("Comment saved!")
-
 # --- VIEW REGISTER BUTTON (TOGGLE) ---
 with col_view:
     if st.button("📋 Register", use_container_width=True):
         st.session_state["show_register"] = not st.session_state.get("show_register", False)
 
-# --- DISPLAY REGISTER INSIDE PLACEHOLDER ---
+# --- DISPLAY REGISTER TABLE INLINE BELOW BUTTONS ---
 if st.session_state.get("show_register", False):
     df = load_register()
-    placeholder = st.session_state["register_placeholder"]
-    placeholder.subheader("Pressure Register")
-    if df.empty:
-        placeholder.info("No records available.")
-    else:
-        placeholder.dataframe(df, use_container_width=True, hide_index=True)
-        
-        # --- DELETE LAST MEASUREMENT BUTTON ---
-        if st.button("🗑️ Delete Last Measurement"):
-            if not df.empty:
+    with register_container:
+        if df.empty:
+            st.info("No records available.")
+        else:
+            st.dataframe(df, use_container_width=True, hide_index=True)
+
+            # --- DELETE LAST MEASUREMENT BUTTON ---
+            if st.button("🗑️ Delete Last Measurement"):
                 df = df.iloc[:-1]
                 df.to_csv(REGISTER_FILE, index=False)
 
@@ -320,11 +301,11 @@ if st.session_state.get("show_register", False):
 
                 # Refresh the table in the same placeholder
                 df = load_register()
-                placeholder.empty()
+                register_container.empty()
                 if df.empty:
-                    placeholder.info("No records available.")
+                    st.info("No records available.")
                 else:
-                    placeholder.dataframe(df, use_container_width=True, hide_index=True)
+                    st.dataframe(df, use_container_width=True, hide_index=True)
 
 # ----------------------------
 # CALCULATIONS
