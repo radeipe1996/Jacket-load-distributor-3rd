@@ -324,6 +324,3 @@ if failed:
     )
 else:
     st.success("✅ All legs meet minimum load distribution requirements.")
-    )
-else:
-    st.success("✅ All legs meet minimum load distribution requirements.")
