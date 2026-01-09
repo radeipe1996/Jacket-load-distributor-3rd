@@ -241,7 +241,7 @@ if st.session_state.get("last_saved_index") is not None:
 # ----------------------------
 # REGISTER DISPLAY AND DELETE
 # ----------------------------
-placeholder = st.session_state["register_placeholder"]
+placeholder = st.session_state.get("register_placeholder", st.empty())
 
 # Toggle register visibility
 with col_view:
@@ -250,7 +250,7 @@ with col_view:
 
 # Load CSV if register is visible
 if st.session_state.get("show_register", False):
-    df = load_register()
+    df = load_register()  # Always load the CSV, even on fresh start
     placeholder.subheader("Pressure Register")
 
     if df.empty:
