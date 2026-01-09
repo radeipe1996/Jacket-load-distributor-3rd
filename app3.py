@@ -236,35 +236,34 @@ with col_view:
 if st.session_state.get("show_register", False):
     df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
 
-    with st.session_state["register_placeholder"]:
-        st.subheader("Pressure Register")
-        if df.empty:
-            st.info("No records available.")
-        else:
-            st.dataframe(df, use_container_width=True, hide_index=True)
+    placeholder = st.session_state["register_placeholder"]
+    placeholder.subheader("Pressure Register")
 
-            # --- DELETE LAST MEASUREMENT BUTTON ---
-            if st.button("🗑️ Delete Last Measurement"):
-                if not df.empty:
-                    df = df.iloc[:-1]  # Remove last row
-                    df.to_csv(REGISTER_FILE, index=False)
+    if df.empty:
+        placeholder.info("No records available.")
+    else:
+        placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
-                    # Update last_saved_index if needed
-                    if st.session_state.get("last_saved_index") is not None:
-                        if st.session_state["last_saved_index"] >= len(df):
-                            st.session_state["last_saved_index"] = None
+        # --- DELETE LAST MEASUREMENT BUTTON ---
+        if st.button("🗑️ Delete Last Measurement"):
+            if not df.empty:
+                df = df.iloc[:-1]  # Remove last row
+                df.to_csv(REGISTER_FILE, index=False)
 
-                    st.success("Last measurement deleted successfully!")
+                # Update last_saved_index if needed
+                if st.session_state.get("last_saved_index") is not None:
+                    if st.session_state["last_saved_index"] >= len(df):
+                        st.session_state["last_saved_index"] = None
 
-                    # Refresh the table in the same container
-                    df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
-                    st.session_state["register_placeholder"].empty()
-                    with st.session_state["register_placeholder"]:
-                        st.subheader("Pressure Register")
-                        if df.empty:
-                            st.info("No records available.")
-                        else:
-                            st.dataframe(df, use_container_width=True, hide_index=True)
+                st.success("Last measurement deleted successfully!")
+
+                # Refresh the table in the same placeholder
+                df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+                placeholder.empty()
+                if df.empty:
+                    placeholder.info("No records available.")
+                else:
+                    placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
 # ----------------------------
 # CALCULATIONS
