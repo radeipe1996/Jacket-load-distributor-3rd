@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime
 import os
 
 # ----------------------------
@@ -12,23 +12,11 @@ st.set_page_config(
     layout="centered"
 )
 
-# ----------------------------
-# SESSION STATE INITIALIZATION
-# ----------------------------
 if "show_register" not in st.session_state:
     st.session_state["show_register"] = False
 
 if "delete_last" not in st.session_state:
     st.session_state["delete_last"] = False
-
-if "last_saved_index" not in st.session_state:
-    st.session_state["last_saved_index"] = None
-
-if "register_placeholder" not in st.session_state:
-    st.session_state["register_placeholder"] = st.empty()
-
-if "last_comment" not in st.session_state:
-    st.session_state["last_comment"] = ""
     
 # ----------------------------
 # DATA
@@ -100,75 +88,6 @@ JACKETS = {
     "G01": {"EAC":{"A":11.6,"B":11.4,"C":22.9,"D":12.3}, "OBS":{"A":17.3,"B":20.1,"C":22.9,"D":17.0}},
 }
 
-# ----------------------------
-# COMPLETE THEORETICAL STROKE DATA
-# ----------------------------
-THEORETICAL_STROKE = {
-    "G05": {"BP": 0.0, "BQ": 12.3, "AQ": 0.0, "AP": 12.4},
-    "H05": {"BP": 15.3, "BQ": 0.0, "AQ": 15.3, "AP": 0.0},
-    "J05": {"BP": 0.0, "BQ": 16.8, "AQ": 0.0, "AP": 16.8},
-    "J04": {"BP": 2.7, "BQ": 0.0, "AQ": 2.7, "AP": 0.0},
-    "K04": {"BP": 5.5, "BQ": 0.0, "AQ": 5.5, "AP": 0.0},
-    "L04": {"BP": 0.0, "BQ": 2.0, "AQ": 0.0, "AP": 2.0},
-    "M04": {"BP": 12.1, "BQ": 0.0, "AQ": 12.0, "AP": 0.0},
-    "L05": {"BP": 0.0, "BQ": 24.3, "AQ": 0.0, "AP": 24.2},
-    "M05": {"BP": 27.4, "BQ": 0.0, "AQ": 27.4, "AP": 0.0},
-    "L06": {"BP": 0.0, "BQ": 7.1, "AQ": 0.0, "AP": 7.2},
-    "M06": {"BP": 12.0, "BQ": 0.0, "AQ": 12.0, "AP": 0.0},
-    "L07": {"BP": 0.0, "BQ": 4.0, "AQ": 0.0, "AP": 4.0},
-    "M07": {"BP": 12.0, "BQ": 0.0, "AQ": 12.0, "AP": 0.0},
-    "F05": {"BP": 6.0, "BQ": 0.0, "AQ": 6.0, "AP": 0.0},
-    "E05": {"BP": 0.0, "BQ": 2.2, "AQ": 0.0, "AP": 2.2},
-    "D05": {"BP": 0.0, "BQ": 7.5, "AQ": 0.0, "AP": 7.4},
-    "E04": {"BP": 7.9, "BQ": 3.4, "AQ": 7.9, "AP": 3.4},
-    "G04": {"BP": 0.0, "BQ": 0.0, "AQ": 0.0, "AP": 0.0},
-    "K05": {"BP": 3.1, "BQ": 3.4, "AQ": 3.1, "AP": 3.4},
-    "K06": {"BP": 0.0, "BQ": 14.0, "AQ": 0.0, "AP": 14.0},
-    "K07": {"BP": 0.0, "BQ": 0.0, "AQ": 0.0, "AP": 0.0},
-    "J07": {"BP": 11.2, "BQ": 0.0, "AQ": 11.2, "AP": 0.0},
-    "H07": {"BP": 2.2, "BQ": 0.0, "AQ": 2.2, "AP": 0.0},
-    "G07": {"BP": 0.0, "BQ": 0.0, "AQ": 0.0, "AP": 0.0},
-    "J06": {"BP": 0.0, "BQ": 11.3, "AQ": 0.0, "AP": 11.3},
-    "H06": {"BP": 0.0, "BQ": 11.4, "AQ": 0.0, "AP": 10.9},
-    "G06": {"BP": 12.0, "BQ": 0.0, "AQ": 12.0, "AP": 0.0},
-    "F06": {"BP": 5.2, "BQ": 0.0, "AQ": 5.2, "AP": 0.0},
-    "D06": {"BP": 3.9, "BQ": 0.0, "AQ": 3.9, "AP": 0.0},
-    "F07": {"BP": 4.1, "BQ": 0.0, "AQ": 4.0, "AP": 0.0},
-    "E07": {"BP": 4.4, "BQ": 0.0, "AQ": 4.4, "AP": 0.0},
-    "D07 (Radar)": {"BP": 0.0, "BQ": 8.8, "AQ": 0.0, "AP": 8.8},
-    "E06": {"BP": 15.1, "BQ": 0.0, "AQ": 15.1, "AP": 0.0},
-    "L03": {"BP": 6.1, "BQ": 0.0, "AQ": 6.1, "AP": 0.0},
-    "M01": {"BP": 1.7, "BQ": 4.4, "AQ": 1.6, "AP": 4.5},
-    "A04": {"BP": 0.0, "BQ": 2.7, "AQ": 0.0, "AP": 2.6},
-    "A03": {"BP": 1.3, "BQ": 1.3, "AQ": 1.3, "AP": 1.3},
-    "A02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "J01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "L02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "M02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "M03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "L01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "K01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "H04": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "H01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "H02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "G02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "E03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "D04": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "C04": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "B04": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "B03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "B02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "C03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "C02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "D03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "E02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "F02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "E01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "F01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-    "G01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
-}
-
-
 LEG_LABELS = {
     "A": "BP (A)",
     "B": "BQ (B)",
@@ -179,8 +98,11 @@ LEG_LABELS = {
 # ----------------------------
 # FUNCTIONS
 # ----------------------------
+from datetime import datetime, timezone
+
 def save_pressures(jacket_id, case, pressures):
-    now = datetime.now(timezone.utc).strftime("%d/%m/%y %H:%M:%S")
+    now = datetime.now().strftime("%d/%m/%y %H:%M:%S")
+
     new_row = {
         "Jacket ID": jacket_id,
         "Case": case,
@@ -191,11 +113,13 @@ def save_pressures(jacket_id, case, pressures):
         "AP (D)": pressures["D"],
         "Comment": ""
     }
+
     if os.path.exists(REGISTER_FILE):
         df = pd.read_csv(REGISTER_FILE)
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     else:
         df = pd.DataFrame([new_row])
+
     df.to_csv(REGISTER_FILE, index=False)
     return len(df) - 1
 
@@ -203,12 +127,6 @@ def load_register():
     if os.path.exists(REGISTER_FILE):
         return pd.read_csv(REGISTER_FILE)
     return pd.DataFrame()
-
-def update_comment(idx, comment):
-    df = pd.read_csv(REGISTER_FILE)
-    df.at[idx, "Comment"] = comment
-    df.to_csv(REGISTER_FILE, index=False)
-    st.session_state["last_comment"] = comment
 
 def leg_box(label, value, minimum):
     color = "#2ecc71" if value >= minimum else "#e74c3c"
@@ -256,56 +174,96 @@ with col2:
 pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
 
 # ----------------------------
-# DATA LOGGING
+# DATA LOGGING (IMMEDIATELY BELOW INPUT)
 # ----------------------------
 st.subheader("Data Logging")
 col_save, col_view = st.columns(2)
 
-# Placeholder right below buttons
-register_container = st.container()
+# Track last saved record in session state
+if "last_saved_index" not in st.session_state:
+    st.session_state["last_saved_index"] = None
+
+# Placeholder for the register table
+if "register_placeholder" not in st.session_state:
+    st.session_state["register_placeholder"] = st.empty()
 
 # --- SAVE PRESSURES BUTTON ---
 with col_save:
     if st.button("💾 Save Pressures", use_container_width=True):
-        idx = save_pressures(jacket_id, case, pressures)
-        st.session_state["last_saved_index"] = idx
-        st.session_state["last_comment"] = ""
+        # ✅ TRUE UTC TIME
+        now = datetime.now(timezone.utc).strftime("%d/%m/%y %H:%M:%S")
+
+        new_row = {
+            "Jacket ID": jacket_id,
+            "Case": case,
+            "Date Time (UTC)": now,   # ✅ CORRECT HEADER
+            "BP (A)": pressures["A"],
+            "BQ (B)": pressures["B"],
+            "AQ (C)": pressures["C"],
+            "AP (D)": pressures["D"],
+            "Comment": ""
+        }
+
+        if os.path.exists(REGISTER_FILE):
+            df = pd.read_csv(REGISTER_FILE)
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        else:
+            df = pd.DataFrame([new_row])
+
+        df.to_csv(REGISTER_FILE, index=False)
+        st.session_state["last_saved_index"] = len(df) - 1
         st.success("Pressures saved successfully!")
+
+# --- COMMENT INPUT FOR LAST SAVED RECORD ---
+if st.session_state.get("last_saved_index") is not None:
+    df = pd.read_csv(REGISTER_FILE)
+    idx = st.session_state["last_saved_index"]
+    comment = st.text_input(
+        "Add a comment for last record:",
+        value=df.at[idx, "Comment"]
+    )
+    if st.button("💬 Save Comment"):
+        df.at[idx, "Comment"] = comment
+        df.to_csv(REGISTER_FILE, index=False)
+        st.success("Comment saved!")
 
 # --- VIEW REGISTER BUTTON (TOGGLE) ---
 with col_view:
     if st.button("📋 Register", use_container_width=True):
         st.session_state["show_register"] = not st.session_state.get("show_register", False)
 
-# --- DISPLAY REGISTER TABLE INLINE BELOW BUTTONS ---
+# --- DISPLAY REGISTER INSIDE PLACEHOLDER ---
 if st.session_state.get("show_register", False):
-    df = load_register()
-    with register_container:
-        if df.empty:
-            st.info("No records available.")
-        else:
-            st.dataframe(df, use_container_width=True, hide_index=True)
+    df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
 
-            # --- DELETE LAST MEASUREMENT BUTTON ---
-            if st.button("🗑️ Delete Last Measurement"):
-                df = df.iloc[:-1]
+    placeholder = st.session_state["register_placeholder"]
+    placeholder.subheader("Pressure Register")
+
+    if df.empty:
+        placeholder.info("No records available.")
+    else:
+        placeholder.dataframe(df, use_container_width=True, hide_index=True)
+
+        # --- DELETE LAST MEASUREMENT BUTTON ---
+        if st.button("🗑️ Delete Last Measurement"):
+            if not df.empty:
+                df = df.iloc[:-1]  # Remove last row
                 df.to_csv(REGISTER_FILE, index=False)
 
-                # Update session state
+                # Update last_saved_index if needed
                 if st.session_state.get("last_saved_index") is not None:
                     if st.session_state["last_saved_index"] >= len(df):
                         st.session_state["last_saved_index"] = None
-                        st.session_state["last_comment"] = ""
 
                 st.success("Last measurement deleted successfully!")
 
                 # Refresh the table in the same placeholder
-                df = load_register()
-                register_container.empty()
+                df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+                placeholder.empty()
                 if df.empty:
-                    st.info("No records available.")
+                    placeholder.info("No records available.")
                 else:
-                    st.dataframe(df, use_container_width=True, hide_index=True)
+                    placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
 # ----------------------------
 # CALCULATIONS
@@ -383,9 +341,78 @@ else:
     st.success("✅ All legs meet minimum load distribution requirements.")
 
 # ----------------------------
+# COMPLETE THEORETICAL STROKE DATA
+# ----------------------------
+THEORETICAL_STROKE = {
+    "G05": {"BP": 0.0, "BQ": 12.3, "AQ": 0.0, "AP": 12.4},
+    "H05": {"BP": 15.3, "BQ": 0.0, "AQ": 15.3, "AP": 0.0},
+    "J05": {"BP": 0.0, "BQ": 16.8, "AQ": 0.0, "AP": 16.8},
+    "J04": {"BP": 2.7, "BQ": 0.0, "AQ": 2.7, "AP": 0.0},
+    "K04": {"BP": 5.5, "BQ": 0.0, "AQ": 5.5, "AP": 0.0},
+    "L04": {"BP": 0.0, "BQ": 2.0, "AQ": 0.0, "AP": 2.0},
+    "M04": {"BP": 12.1, "BQ": 0.0, "AQ": 12.0, "AP": 0.0},
+    "L05": {"BP": 0.0, "BQ": 24.3, "AQ": 0.0, "AP": 24.2},
+    "M05": {"BP": 27.4, "BQ": 0.0, "AQ": 27.4, "AP": 0.0},
+    "L06": {"BP": 0.0, "BQ": 7.1, "AQ": 0.0, "AP": 7.2},
+    "M06": {"BP": 12.0, "BQ": 0.0, "AQ": 12.0, "AP": 0.0},
+    "L07": {"BP": 0.0, "BQ": 4.0, "AQ": 0.0, "AP": 4.0},
+    "M07": {"BP": 12.0, "BQ": 0.0, "AQ": 12.0, "AP": 0.0},
+    "F05": {"BP": 6.0, "BQ": 0.0, "AQ": 6.0, "AP": 0.0},
+    "E05": {"BP": 0.0, "BQ": 2.2, "AQ": 0.0, "AP": 2.2},
+    "D05": {"BP": 0.0, "BQ": 7.5, "AQ": 0.0, "AP": 7.4},
+    "E04": {"BP": 7.9, "BQ": 3.4, "AQ": 7.9, "AP": 3.4},
+    "G04": {"BP": 0.0, "BQ": 0.0, "AQ": 0.0, "AP": 0.0},
+    "K05": {"BP": 3.1, "BQ": 3.4, "AQ": 3.1, "AP": 3.4},
+    "K06": {"BP": 0.0, "BQ": 14.0, "AQ": 0.0, "AP": 14.0},
+    "K07": {"BP": 0.0, "BQ": 0.0, "AQ": 0.0, "AP": 0.0},
+    "J07": {"BP": 11.2, "BQ": 0.0, "AQ": 11.2, "AP": 0.0},
+    "H07": {"BP": 2.2, "BQ": 0.0, "AQ": 2.2, "AP": 0.0},
+    "G07": {"BP": 0.0, "BQ": 0.0, "AQ": 0.0, "AP": 0.0},
+    "J06": {"BP": 0.0, "BQ": 11.3, "AQ": 0.0, "AP": 11.3},
+    "H06": {"BP": 0.0, "BQ": 11.4, "AQ": 0.0, "AP": 10.9},
+    "G06": {"BP": 12.0, "BQ": 0.0, "AQ": 12.0, "AP": 0.0},
+    "F06": {"BP": 5.2, "BQ": 0.0, "AQ": 5.2, "AP": 0.0},
+    "D06": {"BP": 3.9, "BQ": 0.0, "AQ": 3.9, "AP": 0.0},
+    "F07": {"BP": 4.1, "BQ": 0.0, "AQ": 4.0, "AP": 0.0},
+    "E07": {"BP": 4.4, "BQ": 0.0, "AQ": 4.4, "AP": 0.0},
+    "D07 (Radar)": {"BP": 0.0, "BQ": 8.8, "AQ": 0.0, "AP": 8.8},
+    "E06": {"BP": 15.1, "BQ": 0.0, "AQ": 15.1, "AP": 0.0},
+    "L03": {"BP": 6.1, "BQ": 0.0, "AQ": 6.1, "AP": 0.0},
+    "M01": {"BP": 1.7, "BQ": 4.4, "AQ": 1.6, "AP": 4.5},
+    "A04": {"BP": 0.0, "BQ": 2.7, "AQ": 0.0, "AP": 2.6},
+    "A03": {"BP": 1.3, "BQ": 1.3, "AQ": 1.3, "AP": 1.3},
+    "A02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "J01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "L02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "M02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "M03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "L01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "K01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "H04": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "H01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "H02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "G02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "E03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "D04": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "C04": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "B04": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "B03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "B02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "C03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "C02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "D03": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "E02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "F02": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "E01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "F01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+    "G01": {"BP": 100.0, "BQ": 100.0, "AQ": 100.0, "AP": 100.0},
+}
+
+# ----------------------------
 # HINT BUTTON
 # ----------------------------
-if st.button("💡 Hint"):
+st.subheader("💡 Hint")
+if st.button("Show Theoretical Stroke"):
     stroke = THEORETICAL_STROKE.get(jacket_id, None)
     if stroke:
         st.info(
