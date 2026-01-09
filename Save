@@ -148,7 +148,7 @@ def leg_box(label, value, minimum):
 # ----------------------------
 # HEADER
 # ----------------------------
-st.title("⚖️ Jacket Load Distribution")
+st.title("⚖️ JKT Load Distribution")
 st.caption("Le Treport OWF - DEME OFFSHORE")
 
 # ----------------------------
@@ -321,7 +321,7 @@ html_layout = f"""
 </div>
 </div>
 """
-components.html(html_layout, height=420)
+components.html(html_layout, height=330)
 
 # ----------------------------
 # WARNINGS
