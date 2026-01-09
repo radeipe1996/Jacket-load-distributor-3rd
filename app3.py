@@ -240,8 +240,8 @@ if st.session_state.get("show_register", False):
                 df.to_csv(REGISTER_FILE, index=False)
                 st.success("Last measurement deleted successfully!")
                 
-                # Force app to rerun so top display updates
-                st.experimental_rerun()
+                # Update the dataframe in place so it reflects immediately
+                st.dataframe(df, use_container_width=True, hide_index=True)
 # ----------------------------
 # CALCULATIONS
 # ----------------------------
