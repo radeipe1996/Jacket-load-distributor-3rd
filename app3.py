@@ -238,16 +238,19 @@ if st.session_state.get("last_saved_index") is not None:
         time.sleep(1)
         msg.empty()
 
-# --- VIEW REGISTER BUTTON (TOGGLE) ---
+# ----------------------------
+# REGISTER DISPLAY AND DELETE
+# ----------------------------
+placeholder = st.session_state["register_placeholder"]
+
+# Toggle register visibility
 with col_view:
     if st.button("📋 Register", use_container_width=True):
         st.session_state["show_register"] = not st.session_state.get("show_register", False)
 
-# --- DISPLAY REGISTER INSIDE PLACEHOLDER ---
+# Reload CSV and display if register is visible
 if st.session_state.get("show_register", False):
     df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
-
-    placeholder = st.session_state["register_placeholder"]
     placeholder.subheader("Pressure Register")
 
     if df.empty:
@@ -255,29 +258,30 @@ if st.session_state.get("show_register", False):
     else:
         placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
-# --- DELETE LAST MEASUREMENT BUTTON ---
-if st.session_state.get("can_delete_last", False) and not df.empty:
-    if st.button("🗑️ Delete Last Measurement"):
-        df = df.iloc[:-1]  # Remove last row
-        df.to_csv(REGISTER_FILE, index=False)
+    # --- DELETE LAST MEASUREMENT BUTTON ---
+    if st.session_state.get("can_delete_last", False) and not df.empty:
+        if st.button("🗑️ Delete Last Measurement"):
+            df = df.iloc[:-1]  # Remove last row
+            df.to_csv(REGISTER_FILE, index=False)
 
-        # Disable further deletion until next save
-        st.session_state["last_saved_index"] = None
-        st.session_state["can_delete_last"] = False
+            # Disable further deletion until next save
+            st.session_state["last_saved_index"] = None
+            st.session_state["can_delete_last"] = False
 
-        # Flash message that disappears after 1s
-        msg = st.empty()
-        msg.success("Last measurement deleted successfully!")
-        import time; time.sleep(1)
-        msg.empty()
+            # Flash message
+            msg = st.empty()
+            msg.success("Last measurement deleted successfully!")
+            time.sleep(1)
+            msg.empty()
 
-        # Refresh table in placeholder
-        df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
-        placeholder.empty()
-        if df.empty:
-            placeholder.info("No records available.")
-        else:
-            placeholder.dataframe(df, use_container_width=True, hide_index=True)
+            # Refresh placeholder table
+            df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+            placeholder.empty()
+            placeholder.subheader("Pressure Register")
+            if df.empty:
+                placeholder.info("No records available.")
+            else:
+                placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
 # ----------------------------
 # CALCULATIONS
