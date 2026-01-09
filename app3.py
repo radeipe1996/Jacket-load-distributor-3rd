@@ -155,7 +155,7 @@ st.caption("Le Treport OWF - DEME OFFSHORE")
 # ----------------------------
 # SELECTION
 # ----------------------------
-st.subheader("Jacket & Case")
+
 jacket_id = st.selectbox("Jacket ID", list(JACKETS.keys()))
 case = st.radio("Case", ["EAC", "OBS"], horizontal=True)
 min_targets = JACKETS[jacket_id][case]
