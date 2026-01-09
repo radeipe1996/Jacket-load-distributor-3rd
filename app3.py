@@ -341,7 +341,6 @@ st.metric("Total Pressure (bar)", f"{total_pressure:.2f}")
 # ----------------------------
 # VISUALIZATION
 # ----------------------------
-st.subheader("Jacket Visualization")
 html_layout = f"""
 <div style="max-width:360px;margin:auto;font-family:Arial;">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
