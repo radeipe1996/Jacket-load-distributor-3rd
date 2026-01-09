@@ -231,7 +231,13 @@ if st.session_state.get("show_register", False):
         st.info("No records available.")
     else:
         st.dataframe(df, use_container_width=True, hide_index=True)
-
+        
+ # --- DELETE LAST MEASUREMENT BUTTON ---
+        if st.button("🗑️ Delete Last Measurement"):
+            df = df.iloc[:-1]  # remove last row
+            df.to_csv(REGISTER_FILE, index=False)
+            st.success("Last measurement deleted successfully!")
+            st.experimental_rerun()  # refresh the app to reflect changes
 # ----------------------------
 # CALCULATIONS
 # ----------------------------
