@@ -1,24 +1,23 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime
 import os
 
 # ----------------------------
 # PAGE CONFIG
 # ----------------------------
-st.set_page_config(page_title="Jacket Load Distribution", layout="centered")
+st.set_page_config(
+    page_title="Jacket Load Distribution",
+    layout="centered"
+)
 
-# ----------------------------
-# SESSION STATE
-# ----------------------------
-for key in ["show_register", "last_saved_index", "register_placeholder"]:
-    if key not in st.session_state:
-        if key == "register_placeholder":
-            st.session_state[key] = st.empty()
-        else:
-            st.session_state[key] = False if key == "show_register" else None
+if "show_register" not in st.session_state:
+    st.session_state["show_register"] = False
 
+if "delete_last" not in st.session_state:
+    st.session_state["delete_last"] = False
+    
 # ----------------------------
 # DATA
 # ----------------------------
@@ -89,28 +88,45 @@ JACKETS = {
     "G01": {"EAC":{"A":11.6,"B":11.4,"C":22.9,"D":12.3}, "OBS":{"A":17.3,"B":20.1,"C":22.9,"D":17.0}},
 }
 
-LEG_LABELS = {"A": "BP (A)", "B": "BQ (B)", "C": "AQ (C)", "D": "AP (D)"}
+LEG_LABELS = {
+    "A": "BP (A)",
+    "B": "BQ (B)",
+    "C": "AQ (C)",
+    "D": "AP (D)"
+}
 
 # ----------------------------
 # FUNCTIONS
 # ----------------------------
-def load_register():
-    return pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
-
-def save_register(df):
-    df.to_csv(REGISTER_FILE, index=False)
+from datetime import datetime, timezone
 
 def save_pressures(jacket_id, case, pressures):
-    now = datetime.now(timezone.utc).strftime("%d/%m/%y %H:%M:%S")
+    now = datetime.now().strftime("%d/%m/%y %H:%M:%S")
+
     new_row = {
-        "Jacket ID": jacket_id, "Case": case, "Date Time (UTC)": now,
-        "BP (A)": pressures["A"], "BQ (B)": pressures["B"], 
-        "AQ (C)": pressures["C"], "AP (D)": pressures["D"], "Comment": ""
+        "Jacket ID": jacket_id,
+        "Case": case,
+        "Date Time (UTC)": now,
+        "BP (A)": pressures["A"],
+        "BQ (B)": pressures["B"],
+        "AQ (C)": pressures["C"],
+        "AP (D)": pressures["D"],
+        "Comment": ""
     }
-    df = load_register()
-    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    save_register(df)
+
+    if os.path.exists(REGISTER_FILE):
+        df = pd.read_csv(REGISTER_FILE)
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    else:
+        df = pd.DataFrame([new_row])
+
+    df.to_csv(REGISTER_FILE, index=False)
     return len(df) - 1
+
+def load_register():
+    if os.path.exists(REGISTER_FILE):
+        return pd.read_csv(REGISTER_FILE)
+    return pd.DataFrame()
 
 def leg_box(label, value, minimum):
     color = "#2ecc71" if value >= minimum else "#e74c3c"
@@ -123,7 +139,8 @@ def leg_box(label, value, minimum):
         text-align:center;
         font-size:14px;
         min-height:90px;">
-        <strong>{label}</strong><br>{value:.1f}%<br>
+        <strong>{label}</strong><br>
+        {value:.1f}%<br>
         <span style="font-size:12px;">Min: {minimum:.1f}%</span>
     </div>
     """
@@ -147,68 +164,119 @@ min_targets = JACKETS[jacket_id][case]
 # ----------------------------
 st.subheader("Pressure Input (bar)")
 col1, col2 = st.columns(2)
-pA = col1.number_input("BP (A)", min_value=0.0, step=0.1)
-pC = col1.number_input("AQ (C)", min_value=0.0, step=0.1)
-pB = col2.number_input("BQ (B)", min_value=0.0, step=0.1)
-pD = col2.number_input("AP (D)", min_value=0.0, step=0.1)
+with col1:
+    pA = st.number_input("BP (A)", min_value=0.0, step=0.1)
+    pC = st.number_input("AQ (C)", min_value=0.0, step=0.1)
+with col2:
+    pB = st.number_input("BQ (B)", min_value=0.0, step=0.1)
+    pD = st.number_input("AP (D)", min_value=0.0, step=0.1)
+
 pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
 
 # ----------------------------
-# DATA LOGGING
+# DATA LOGGING (IMMEDIATELY BELOW INPUT)
 # ----------------------------
 st.subheader("Data Logging")
 col_save, col_view = st.columns(2)
 
-# Save Pressures
+# Track last saved record in session state
+if "last_saved_index" not in st.session_state:
+    st.session_state["last_saved_index"] = None
+
+# Placeholder for the register table
+if "register_placeholder" not in st.session_state:
+    st.session_state["register_placeholder"] = st.empty()
+
+# --- SAVE PRESSURES BUTTON ---
 with col_save:
     if st.button("💾 Save Pressures", use_container_width=True):
-        idx = save_pressures(jacket_id, case, pressures)
-        st.session_state["last_saved_index"] = idx
+        # ✅ TRUE UTC TIME
+        now = datetime.now(timezone.utc).strftime("%d/%m/%y %H:%M:%S")
+
+        new_row = {
+            "Jacket ID": jacket_id,
+            "Case": case,
+            "Date Time (UTC)": now,   # ✅ CORRECT HEADER
+            "BP (A)": pressures["A"],
+            "BQ (B)": pressures["B"],
+            "AQ (C)": pressures["C"],
+            "AP (D)": pressures["D"],
+            "Comment": ""
+        }
+
+        if os.path.exists(REGISTER_FILE):
+            df = pd.read_csv(REGISTER_FILE)
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        else:
+            df = pd.DataFrame([new_row])
+
+        df.to_csv(REGISTER_FILE, index=False)
+        st.session_state["last_saved_index"] = len(df) - 1
         st.success("Pressures saved successfully!")
 
-# Save Comment
-if st.session_state["last_saved_index"] is not None:
-    df = load_register()
+# --- COMMENT INPUT FOR LAST SAVED RECORD ---
+if st.session_state.get("last_saved_index") is not None:
+    df = pd.read_csv(REGISTER_FILE)
     idx = st.session_state["last_saved_index"]
-    comment = st.text_input("Add a comment for last record:", value=df.at[idx, "Comment"])
+    comment = st.text_input(
+        "Add a comment for last record:",
+        value=df.at[idx, "Comment"]
+    )
     if st.button("💬 Save Comment"):
         df.at[idx, "Comment"] = comment
-        save_register(df)
+        df.to_csv(REGISTER_FILE, index=False)
         st.success("Comment saved!")
 
-# Toggle Register
+# --- VIEW REGISTER BUTTON (TOGGLE) ---
 with col_view:
     if st.button("📋 Register", use_container_width=True):
-        st.session_state["show_register"] = not st.session_state["show_register"]
+        st.session_state["show_register"] = not st.session_state.get("show_register", False)
 
-# Display Register
-placeholder = st.session_state["register_placeholder"]
-placeholder.empty()
-if st.session_state["show_register"]:
-    df = load_register()
+# --- DISPLAY REGISTER INSIDE PLACEHOLDER ---
+if st.session_state.get("show_register", False):
+    df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+
+    placeholder = st.session_state["register_placeholder"]
+    placeholder.subheader("Pressure Register")
+
     if df.empty:
         placeholder.info("No records available.")
     else:
-        placeholder.subheader("Pressure Register")
         placeholder.dataframe(df, use_container_width=True, hide_index=True)
+
+        # --- DELETE LAST MEASUREMENT BUTTON ---
         if st.button("🗑️ Delete Last Measurement"):
-            df = df.iloc[:-1]
-            save_register(df)
-            st.session_state["last_saved_index"] = None
-            st.success("Last measurement deleted successfully!")
-            placeholder.empty()
-            if df.empty:
-                placeholder.info("No records available.")
-            else:
-                placeholder.subheader("Pressure Register")
-                placeholder.dataframe(df, use_container_width=True, hide_index=True)
+            if not df.empty:
+                df = df.iloc[:-1]  # Remove last row
+                df.to_csv(REGISTER_FILE, index=False)
+
+                # Update last_saved_index if needed
+                if st.session_state.get("last_saved_index") is not None:
+                    if st.session_state["last_saved_index"] >= len(df):
+                        st.session_state["last_saved_index"] = None
+
+                st.success("Last measurement deleted successfully!")
+
+                # Refresh the table in the same placeholder
+                df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
+                placeholder.empty()
+                if df.empty:
+                    placeholder.info("No records available.")
+                else:
+                    placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
 # ----------------------------
-# CALCULATIONS & RESULTS
+# CALCULATIONS
 # ----------------------------
 total_pressure = sum(pressures.values())
-percentages = {k: (v / total_pressure) * 100 if total_pressure > 0 else 0 for k, v in pressures.items()}
+if total_pressure > 0:
+    percentages = {k: (v / total_pressure) * 100 for k, v in pressures.items()}
+else:
+    percentages = {k: 0 for k in pressures}
 
+# ----------------------------
+# RESULTS
+# ----------------------------
 st.subheader("Results")
 st.metric("Total Pressure (bar)", f"{total_pressure:.2f}")
 
@@ -216,25 +284,39 @@ st.metric("Total Pressure (bar)", f"{total_pressure:.2f}")
 # VISUALIZATION
 # ----------------------------
 st.subheader("Jacket Visualization")
-leg_html = "".join([leg_box(LEG_LABELS[k], percentages[k], min_targets[k]) for k in ["A","B","C","D"]])
 html_layout = f"""
 <div style="max-width:360px;margin:auto;font-family:Arial;">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
     <div style="display:flex;align-items:center;gap:8px;">
         <div style="
-            background-color:#7f8c8d;color:white;
-            padding:4px;border-radius:6px;
-            font-size:11px;width:34px;height:34px;
-            display:flex;align-items:center;justify-content:center;">BL</div>
+            background-color:#7f8c8d;
+            color:white;
+            padding:4px;
+            border-radius:6px;
+            font-size:11px;
+            width:34px;
+            height:34px;
+            display:flex;
+            align-items:center;
+            justify-content:center;">
+            BL
+        </div>
         {leg_box("BP (A)", percentages["A"], min_targets["A"])}
     </div>
+
     {leg_box("BQ (B)", percentages["B"], min_targets["B"])}
     {leg_box("AP (D)", percentages["D"], min_targets["D"])}
     {leg_box("AQ (C)", percentages["C"], min_targets["C"])}
+
 </div>
 <div style="
-    margin-top:14px;background-color:#34495e;color:white;
-    padding:12px;border-radius:12px;text-align:center;">
+    margin-top:14px;
+    background-color:#34495e;
+    color:white;
+    padding:12px;
+    border-radius:12px;
+    text-align:center;">
     <strong>{jacket_id}</strong>
 </div>
 </div>
@@ -244,9 +326,16 @@ components.html(html_layout, height=420)
 # ----------------------------
 # WARNINGS
 # ----------------------------
-failed = [LEG_LABELS[k] for k in percentages if percentages[k] < min_targets[k]]
+failed = [
+    LEG_LABELS[k] for k in percentages
+    if percentages[k] < min_targets[k]
+]
+
 if failed:
-    st.warning(f"⚠️ Minimum load distribution NOT achieved on: {', '.join(failed)}\n\n"
-               "Suggested action:\nRe-level the jacket. Remember to watch the level indicator while levelling.")
+    st.warning(
+        f"⚠️ Minimum load distribution NOT achieved on: {', '.join(failed)}\n\n"
+        "Suggested action:\n"
+        "Re-level the jacket. Remember to watch the level indicator while levelling."
+    )
 else:
     st.success("✅ All legs meet minimum load distribution requirements.")
