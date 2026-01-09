@@ -248,7 +248,7 @@ with col_view:
     if st.button("📋 Register", use_container_width=True):
         st.session_state["show_register"] = not st.session_state.get("show_register", False)
 
-# Reload CSV and display if register is visible
+# Load CSV if register is visible
 if st.session_state.get("show_register", False):
     df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
     placeholder.subheader("Pressure Register")
@@ -259,6 +259,7 @@ if st.session_state.get("show_register", False):
         placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
     # --- DELETE LAST MEASUREMENT BUTTON ---
+    # Only show delete button if user saved a new record this session
     if st.session_state.get("can_delete_last", False) and not df.empty:
         if st.button("🗑️ Delete Last Measurement"):
             df = df.iloc[:-1]  # Remove last row
@@ -282,6 +283,7 @@ if st.session_state.get("show_register", False):
                 placeholder.info("No records available.")
             else:
                 placeholder.dataframe(df, use_container_width=True, hide_index=True)
+
 
 # ----------------------------
 # CALCULATIONS
