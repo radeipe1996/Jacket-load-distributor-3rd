@@ -265,7 +265,7 @@ if st.session_state.get("show_register", False):
                 msg = st.empty()
                 msg.success("Last measurement deleted successfully!")
                 time.sleep(2)
-                msg.empty())
+                msg.empty()
 
                 # Refresh the table in the same placeholder
                 df = pd.read_csv(REGISTER_FILE) if os.path.exists(REGISTER_FILE) else pd.DataFrame()
