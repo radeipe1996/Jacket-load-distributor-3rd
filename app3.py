@@ -321,7 +321,7 @@ html_layout = f"""
 </div>
 </div>
 """
-components.html(html_layout, height=420)
+components.html(html_layout, height=360)
 
 # ----------------------------
 # WARNINGS
