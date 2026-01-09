@@ -330,7 +330,10 @@ if st.session_state.get("show_register", False):
 # CALCULATIONS
 # ----------------------------
 total_pressure = sum(pressures.values())
-percentages = {k: (v / total_pressure) * 100 if total_pressure > 0 else 0 for k, v in pressures.items()}
+if total_pressure > 0:
+    percentages = {k: (v / total_pressure) * 100 for k, v in pressures.items()}
+else:
+    percentages = {k: 0 for k in pressures}
 
 # ----------------------------
 # RESULTS
@@ -341,6 +344,7 @@ st.metric("Total Pressure (bar)", f"{total_pressure:.2f}")
 # ----------------------------
 # VISUALIZATION
 # ----------------------------
+st.subheader("Jacket Visualization")
 html_layout = f"""
 <div style="max-width:360px;margin:auto;font-family:Arial;">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -383,7 +387,11 @@ components.html(html_layout, height=420)
 # ----------------------------
 # WARNINGS
 # ----------------------------
-failed = [LEG_LABELS[k] for k in percentages if percentages[k] < min_targets[k]]
+failed = [
+    LEG_LABELS[k] for k in percentages
+    if percentages[k] < min_targets[k]
+]
+
 if failed:
     st.warning(
         f"⚠️ Minimum load distribution NOT achieved on: {', '.join(failed)}\n\n"
