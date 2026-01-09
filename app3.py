@@ -244,7 +244,7 @@ if st.session_state.get("show_register", False):
                 st.success("Last measurement deleted successfully!")
 
                 # Force display to update with new CSV
-                df = pd.read_csv(REGISTER_FILE)
+                st.experimental_rerun()
 # ----------------------------
 # CALCULATIONS
 # ----------------------------
