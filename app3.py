@@ -157,11 +157,11 @@ components.html(f"""
 """, height=60)
 
 st.markdown("""
-<div style="font-size:28px; font-weight:bold;">
-    JKT Levelling ⚖️
+<div style="text-align:center;">
+    <div style="font-size:28px; font-weight:bold;">JKT Levelling ⚖️</div>
+    <div style="font-size:14px; color:gray;">Le Treport OWF - DEME OFFSHORE</div>
 </div>
 """, unsafe_allow_html=True)
-st.caption("Le Treport OWF - DEME OFFSHORE")
 
 # ----------------------------
 # SELECTION
