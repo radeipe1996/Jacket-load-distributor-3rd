@@ -355,10 +355,23 @@ failed = [
 ]
 
 if failed:
+    # Determine weaker diagonal
+    diagonal_AC = percentages["A"] + percentages["C"]
+    diagonal_BD = percentages["B"] + percentages["D"]
+
+    if diagonal_AC < diagonal_BD:
+        weaker_diagonal = ["A", "C"]
+    else:
+        weaker_diagonal = ["B", "D"]
+
+    # Among weaker diagonal, choose leg with more pressure
+    suggested_leg = max(weaker_diagonal, key=lambda k: percentages[k])
+
     st.warning(
         f"⚠️ Minimum load distribution NOT achieved on: {', '.join(failed)}\n\n"
-        "Suggested action:\n"
-        "Re-level the jacket. Remember to watch the level indicator while levelling."
+        f"Suggested action:\n"
+        f"Pressurize the leg {LEG_LABELS[suggested_leg]}.\n"
+        "Watch out the levelling indicator."
     )
 else:
     st.success("✅ All legs meet minimum load distribution requirements.")
