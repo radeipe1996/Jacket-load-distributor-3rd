@@ -129,8 +129,21 @@ def load_register():
         return pd.read_csv(REGISTER_FILE)
     return pd.DataFrame()
 
-def leg_box(label, value, minimum):
-    color = "#2ecc71" if value >= minimum else "#e74c3c"
+def leg_box(label, pressure, total_pressure, minimum):
+    """
+    label: leg label
+    pressure: actual input pressure in bar
+    total_pressure: sum of all leg pressures (for % calculation)
+    minimum: minimum % required
+    """
+    if total_pressure > 0:
+        percentage = (pressure / total_pressure) * 100
+    else:
+        percentage = 0
+
+    # Color based on meeting minimum %
+    color = "#2ecc71" if percentage >= minimum else "#e74c3c"
+
     return f"""
     <div style="
         background-color:{color};
@@ -141,8 +154,9 @@ def leg_box(label, value, minimum):
         font-size:14px;
         min-height:90px;">
         <strong>{label}</strong><br>
-        {value:.1f}%<br>
-        <span style="font-size:12px;">Min: {minimum:.1f}%</span>
+        {percentage:.1f}%<br>
+        <span style="font-size:12px;">Min: {minimum:.1f}%</span><br>
+        <span style="font-size:14px;">P: {pressure:.0f} bar</span>
     </div>
     """
 
@@ -346,12 +360,13 @@ html_layout = f"""
                 justify-content:center;">
                 BL
             </div>
-            {leg_box("BP (A)", percentages["A"], min_targets["A"])}
+            {leg_box("BP (A)", pressures["A"], total_pressure, min_targets["A"])}
         </div>
 
-        {leg_box("BQ (B)", percentages["B"], min_targets["B"])}
-        {leg_box("AP (D)", percentages["D"], min_targets["D"])}
-        {leg_box("AQ (C)", percentages["C"], min_targets["C"])}
+            {leg_box("BQ (B)", pressures["B"], total_pressure, min_targets["B"])}
+            {leg_box("AP (D)", pressures["D"], total_pressure, min_targets["D"])}
+            {leg_box("AQ (C)", pressures["C"], total_pressure, min_targets["C"])}
+
 
     </div>
 </div>
