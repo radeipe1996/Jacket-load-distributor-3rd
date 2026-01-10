@@ -359,7 +359,7 @@ if failed:
     st.warning(
         f"⚠️ Minimum load distribution NOT achieved on: {', '.join(failed)}\n\n"
         "Suggested action:\n"
-        "Re-level the jacket. Remember to watch the level indicator while levelling."
+        "Re-level the jacket. Watch out the level indicator."
     )
 else:
     st.success("✅ All legs meet minimum load distribution requirements.")
