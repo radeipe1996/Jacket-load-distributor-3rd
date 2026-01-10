@@ -141,6 +141,8 @@ def leg_box(label, value, minimum):
         font-size:14px;
         min-height:90px;">
         <strong>{label}</strong><br>
+        {value:.1f}%<br>
+        <span style="font-size:12px;">Min: {minimum:.1f}%</span><br>
         <span style="font-size:14px;">{value:.1f} bar</span>
     </div>
     """
