@@ -303,7 +303,54 @@ if st.session_state.get("show_register", False):
 # ----------------------------
 st.subheader("Jacket Visualization")
 
+# --- WEAKER DIAGONAL & FLASH LOGIC ---
+# Only trigger flashing if any leg is below minimum
+failed_legs = [k for k in percentages if percentages[k] < min_targets[k]]
+
+flash_leg = None
+if failed_legs:
+    # Diagonals: A+C and B+D
+    diag_AC = percentages["A"] + percentages["C"]
+    diag_BD = percentages["B"] + percentages["D"]
+
+    if diag_AC < diag_BD:
+        # Diagonal A+C is weaker
+        flash_leg = "A" if percentages["A"] > percentages["C"] else "C"
+    else:
+        # Diagonal B+D is weaker
+        flash_leg = "B" if percentages["B"] > percentages["D"] else "D"
+
+# Helper for flashing leg
+def leg_box_with_flash(label, value, minimum, flash=False):
+    if flash:
+        flash_style = "animation: flash 1s infinite; color:black;"
+    else:
+        flash_style = ""
+    color = "#2ecc71" if value >= minimum else "#e74c3c"
+    return f"""
+    <div style="
+        background-color:{color};
+        {flash_style}
+        padding:12px;
+        border-radius:12px;
+        text-align:center;
+        font-size:14px;
+        min-height:90px;">
+        <strong>{label}</strong><br>
+        {value:.1f}%<br>
+        <span style="font-size:12px;">Min: {minimum:.1f}%</span>
+    </div>
+    """
+
+# HTML layout
 html_layout = f"""
+<style>
+@keyframes flash {{
+    0% {{ background-color: #f1c40f; }}
+    50% {{ background-color: #f39c12; }}
+    100% {{ background-color: #f1c40f; }}
+}}
+</style>
 <div style="max-width:360px;margin:auto;font-family:Arial;">
 
     <!-- Jacket ID at the top -->
@@ -333,16 +380,17 @@ html_layout = f"""
                 justify-content:center;">
                 BL
             </div>
-            {leg_box("BP (A)", percentages["A"], min_targets["A"])}
+            {leg_box_with_flash("BP (A)", percentages["A"], min_targets["A"], flash=(flash_leg=="A"))}
         </div>
 
-        {leg_box("BQ (B)", percentages["B"], min_targets["B"])}
-        {leg_box("AP (D)", percentages["D"], min_targets["D"])}
-        {leg_box("AQ (C)", percentages["C"], min_targets["C"])}
+        {leg_box_with_flash("BQ (B)", percentages["B"], min_targets["B"], flash=(flash_leg=="B"))}
+        {leg_box_with_flash("AP (D)", percentages["D"], min_targets["D"], flash=(flash_leg=="D"))}
+        {leg_box_with_flash("AQ (C)", percentages["C"], min_targets["C"], flash=(flash_leg=="C"))}
 
     </div>
 </div>
 """
+
 components.html(html_layout, height=330)
 
 # ----------------------------
