@@ -156,7 +156,11 @@ components.html(f"""
 </div>
 """, height=60)
 
-st.title("JKT Levelling ⚖️")
+st.markdown("""
+<div style="font-size:28px; font-weight:bold;">
+    JKT Levelling ⚖️
+</div>
+""", unsafe_allow_html=True)
 st.caption("Le Treport OWF - DEME OFFSHORE")
 
 # ----------------------------
