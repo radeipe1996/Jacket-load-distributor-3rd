@@ -129,8 +129,8 @@ def load_register():
         return pd.read_csv(REGISTER_FILE)
     return pd.DataFrame()
 
-def leg_box(label, value, minimum):
-    color = "#2ecc71" if value >= minimum else "#e74c3c"
+def leg_box(label, pressure, minimum):
+    color = "#2ecc71" if pressure >= minimum else "#e74c3c"
     return f"""
     <div style="
         background-color:{color};
@@ -141,9 +141,7 @@ def leg_box(label, value, minimum):
         font-size:14px;
         min-height:90px;">
         <strong>{label}</strong><br>
-        {value:.1f}%<br>
-        <span style="font-size:12px;">Min: {minimum:.1f}%</span><br>
-        <span style="font-size:14px;">{value:.1f} bar</span>
+        <span style="font-size:14px;">{pressure:.1f} bar</span>
     </div>
     """
 
