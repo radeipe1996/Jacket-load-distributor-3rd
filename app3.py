@@ -350,37 +350,16 @@ components.html(html_layout, height=330)
 # ----------------------------
 # WARNINGS
 # ----------------------------
-
-# Identify legs below their limits
-failed = [k for k in pressures if pressures[k] < min_targets[k]]
-failed_labels = [LEG_LABELS[k] for k in failed]
+failed = [
+    LEG_LABELS[k] for k in percentages
+    if percentages[k] < min_targets[k]
+]
 
 if failed:
-    # Compute diagonal sums
-    diag_AC = pressures["A"] + pressures["C"]
-    diag_BD = pressures["B"] + pressures["D"]
-
-    # Determine weaker diagonal
-    if diag_AC < diag_BD:
-        weaker = ["A", "C"]
-        stronger = ["B", "D"]
-    else:
-        weaker = ["B", "D"]
-        stronger = ["A", "C"]
-
-    # Determine suggested leg to pressurize
-    # Prefer the leg with more pressure from weaker diagonal
-    if any(pressures[leg] < min_targets[leg] for leg in weaker):
-        suggested_leg = max(weaker, key=lambda x: pressures[x])
-    else:
-        # If all legs in weaker diagonal are OK, take leg with more pressure from stronger diagonal
-        suggested_leg = max(stronger, key=lambda x: pressures[x])
-
     st.warning(
-        f"⚠️ Minimum load distribution NOT achieved on: {', '.join(failed_labels)}\n\n"
-        f"Suggested action:\n"
-        f"Pressurize the leg {LEG_LABELS[suggested_leg]}.\n"
-        "Watch out the levelling indicator while levelling."
+        f"⚠️ Minimum load distribution NOT achieved on: {', '.join(failed)}\n\n"
+        "Suggested action:\n"
+        "Re-level the jacket. Remember to watch the level indicator while levelling."
     )
 else:
     st.success("✅ All legs meet minimum load distribution requirements.")
