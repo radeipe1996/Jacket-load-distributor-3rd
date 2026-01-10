@@ -158,7 +158,7 @@ components.html(f"""
 
 st.markdown("""
 <div style="text-align:center;">
-    <div style="font-size:28px; font-weight:bold;">JKT Levelling ⚖️</div>
+    <div style="font-size:30px; font-weight:bold;">JKT Levelling ⚖️</div>
     <div style="font-size:14px; color:gray;">Le Treport OWF - DEME OFFSHORE</div>
 </div>
 """, unsafe_allow_html=True)
