@@ -325,11 +325,12 @@ if total_pressure_nonzero:
 
 # Helper for flashing leg
 def leg_box_with_flash(label, value, minimum, flash=False):
+    color_red = "#e74c3c"
     if flash:
-        flash_style = "animation: flash 1s infinite; color:black;"
+        flash_style = f"animation: flash 1s infinite;"
     else:
         flash_style = ""
-    color = "#2ecc71" if value >= minimum else "#e74c3c"
+    color = "#2ecc71" if value >= minimum else color_red
     return f"""
     <div style="
         background-color:{color};
@@ -345,12 +346,12 @@ def leg_box_with_flash(label, value, minimum, flash=False):
     </div>
     """
 
-# HTML layout
+# HTML layout with flashing CSS
 html_layout = f"""
 <style>
 @keyframes flash {{
-    0% {{ background-color: #f1c40f; }}
-    50% {{ background-color: #f39c12; }}
+    0% {{ background-color: #f1c40f; }}   /* yellow */
+    50% {{ background-color: #e74c3c; }}  /* red (same as below-limit color) */
     100% {{ background-color: #f1c40f; }}
 }}
 </style>
@@ -407,7 +408,7 @@ if failed:
     st.warning(
         f"⚠️ Minimum load distribution NOT achieved on: {', '.join(failed)}\n\n"
         "Suggested action:\n"
-        "Re-level the jacket. Remember to watch the level indicator while levelling."
+        "Pressurize flashing leg. Remember to watch the level indicator while levelling."
     )
 else:
     st.success("✅ All legs meet minimum load distribution requirements.")
