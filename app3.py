@@ -144,6 +144,7 @@ def leg_box(label, value, minimum):
         {value:.1f}%<br>
         <span style="font-size:12px;">Min: {minimum:.1f}%</span>
     </div>
+    """
 
 # ----------------------------
 # HEADER
@@ -173,6 +174,7 @@ with col2:
     pD = st.number_input("AP (D)", min_value=0.0, step=10.0, format="%.0f")
 
 pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
+
 
 # ----------------------------
 # CALCULATIONS
