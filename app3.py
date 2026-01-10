@@ -141,6 +141,7 @@ def leg_box(label, pressure, minimum):
         font-size:14px;
         min-height:90px;">
         <strong>{label}</strong><br>
+        <span style="font-size:12px;">Min: {minimum:.1f}%</span>
         <span style="font-size:14px;">{pressure:.1f} bar</span>
     </div>
     """
