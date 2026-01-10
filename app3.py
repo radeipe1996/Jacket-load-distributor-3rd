@@ -334,10 +334,12 @@ html_layout = f"""
                 justify-content:center;">
                 BL
             </div>
-            {leg_box("BP (A)", pressures["A"], min_targets["A"])}
-            {leg_box("BQ (B)", pressures["B"], min_targets["B"])}
-            {leg_box("AP (D)", pressures["D"], min_targets["D"])}
-            {leg_box("AQ (C)", pressures["C"], min_targets["C"])}
+            {leg_box("BP (A)", percentages["A"], min_targets["A"])}
+        </div>
+
+        {leg_box("BQ (B)", percentages["B"], min_targets["B"])}
+        {leg_box("AP (D)", percentages["D"], min_targets["D"])}
+        {leg_box("AQ (C)", percentages["C"], min_targets["C"])}
 
     </div>
 </div>
