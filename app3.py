@@ -299,63 +299,71 @@ if st.session_state.get("show_register", False):
             else:
                 placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
-# ----------------------------
-# VISUALIZATION
-# ----------------------------
 st.subheader("Jacket Visualization")
 
-# --- WEAKER DIAGONAL & FLASH LOGIC ---
-flash_leg = None
-total_pressure_nonzero = sum(pressures.values()) > 0
-
-if total_pressure_nonzero:
-    # Only trigger flashing if any leg is below minimum
-    failed_legs = [k for k in percentages if percentages[k] < min_targets[k]]
-
-    if failed_legs:
-        # Diagonals: A+C and B+D
-        diag_AC = percentages["A"] + percentages["C"]
-        diag_BD = percentages["B"] + percentages["D"]
-
-        if diag_AC < diag_BD:
-            # Diagonal A+C is weaker
-            flash_leg = "A" if percentages["A"] > percentages["C"] else "C"
-        else:
-            # Diagonal B+D is weaker
-            flash_leg = "B" if percentages["B"] > percentages["D"] else "D"
-
-# Helper for flashing leg
-def leg_box_with_flash(label, value, minimum, flash=False):
-    color_red = "#e74c3c"
+# ----------------------------
+# Dynamic leg box with flashing
+# ----------------------------
+def leg_box_dynamic(label, value, minimum, flash=False):
+    """
+    Returns HTML for a leg box.
+    If flash=True, the leg flashes yellow.
+    Otherwise color depends on value vs minimum (green/red).
+    """
     if flash:
-        flash_style = f"animation: flash 1s infinite;"
+        base_color = "#f1c40f"  # Yellow flashing
+        animation = "animation: flash 1s infinite;"
     else:
-        flash_style = ""
-    color = "#2ecc71" if value >= minimum else color_red
+        base_color = "#2ecc71" if value >= minimum else "#e74c3c"  # green or red
+        animation = ""
+
     return f"""
     <div style="
-        background-color:{color};
-        {flash_style}
+        background-color:{base_color};
+        color:white;
         padding:12px;
         border-radius:12px;
         text-align:center;
         font-size:14px;
-        min-height:90px;">
+        min-height:90px;
+        {animation}">
         <strong>{label}</strong><br>
         {value:.1f}%<br>
         <span style="font-size:12px;">Min: {minimum:.1f}%</span>
     </div>
     """
 
-# HTML layout with flashing CSS
-html_layout = f"""
+# CSS for flashing animation
+st.markdown("""
 <style>
-@keyframes flash {{
-    0% {{ background-color: #f1c40f; }}   /* yellow */
-    50% {{ background-color: #e74c3c; }}  /* red (same as below-limit color) */
-    100% {{ background-color: #f1c40f; }}
-}}
+@keyframes flash {
+    0% {opacity: 1;}
+    50% {opacity: 0.3;}
+    100% {opacity: 1;}
+}
 </style>
+""", unsafe_allow_html=True)
+
+# ----------------------------
+# Determine flashing logic
+# ----------------------------
+if total_pressure > 0 and any(percentages[k] < min_targets[k] for k in percentages):
+    diagonal_AC = percentages["A"] + percentages["C"]
+    diagonal_BD = percentages["B"] + percentages["D"]
+
+    if diagonal_AC < diagonal_BD:
+        # weaker diagonal = A + C
+        flash_leg = "A" if percentages["A"] >= percentages["C"] else "C"
+    else:
+        # weaker diagonal = B + D
+        flash_leg = "B" if percentages["B"] >= percentages["D"] else "D"
+else:
+    flash_leg = None  # no flashing
+
+# ----------------------------
+# HTML Layout
+# ----------------------------
+html_layout = f"""
 <div style="max-width:360px;margin:auto;font-family:Arial;">
 
     <!-- Jacket ID at the top -->
@@ -385,17 +393,16 @@ html_layout = f"""
                 justify-content:center;">
                 BL
             </div>
-            {leg_box_with_flash("BP (A)", percentages["A"], min_targets["A"], flash=(flash_leg=="A"))}
+            {leg_box_dynamic("BP (A)", percentages["A"], min_targets["A"], flash=(flash_leg=="A"))}
         </div>
 
-        {leg_box_with_flash("BQ (B)", percentages["B"], min_targets["B"], flash=(flash_leg=="B"))}
-        {leg_box_with_flash("AP (D)", percentages["D"], min_targets["D"], flash=(flash_leg=="D"))}
-        {leg_box_with_flash("AQ (C)", percentages["C"], min_targets["C"], flash=(flash_leg=="C"))}
+        {leg_box_dynamic("BQ (B)", percentages["B"], min_targets["B"], flash=(flash_leg=="B"))}
+        {leg_box_dynamic("AP (D)", percentages["D"], min_targets["D"], flash=(flash_leg=="D"))}
+        {leg_box_dynamic("AQ (C)", percentages["C"], min_targets["C"], flash=(flash_leg=="C"))}
 
     </div>
 </div>
 """
-
 components.html(html_layout, height=330)
 # ----------------------------
 # WARNINGS
