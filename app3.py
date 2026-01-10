@@ -143,9 +143,7 @@ def leg_box(label, value, minimum):
         <strong>{label}</strong><br>
         {value:.1f}%<br>
         <span style="font-size:12px;">Min: {minimum:.1f}%</span>
-        <span style="font-size:14px;">{pressure:.1f} bar</span>
     </div>
-    """
 
 # ----------------------------
 # HEADER
