@@ -304,21 +304,24 @@ if st.session_state.get("show_register", False):
 st.subheader("Jacket Visualization")
 
 # --- WEAKER DIAGONAL & FLASH LOGIC ---
-# Only trigger flashing if any leg is below minimum
-failed_legs = [k for k in percentages if percentages[k] < min_targets[k]]
-
 flash_leg = None
-if failed_legs:
-    # Diagonals: A+C and B+D
-    diag_AC = percentages["A"] + percentages["C"]
-    diag_BD = percentages["B"] + percentages["D"]
+total_pressure_nonzero = sum(pressures.values()) > 0
 
-    if diag_AC < diag_BD:
-        # Diagonal A+C is weaker
-        flash_leg = "A" if percentages["A"] > percentages["C"] else "C"
-    else:
-        # Diagonal B+D is weaker
-        flash_leg = "B" if percentages["B"] > percentages["D"] else "D"
+if total_pressure_nonzero:
+    # Only trigger flashing if any leg is below minimum
+    failed_legs = [k for k in percentages if percentages[k] < min_targets[k]]
+
+    if failed_legs:
+        # Diagonals: A+C and B+D
+        diag_AC = percentages["A"] + percentages["C"]
+        diag_BD = percentages["B"] + percentages["D"]
+
+        if diag_AC < diag_BD:
+            # Diagonal A+C is weaker
+            flash_leg = "A" if percentages["A"] > percentages["C"] else "C"
+        else:
+            # Diagonal B+D is weaker
+            flash_leg = "B" if percentages["B"] > percentages["D"] else "D"
 
 # Helper for flashing leg
 def leg_box_with_flash(label, value, minimum, flash=False):
@@ -392,7 +395,6 @@ html_layout = f"""
 """
 
 components.html(html_layout, height=330)
-
 # ----------------------------
 # WARNINGS
 # ----------------------------
