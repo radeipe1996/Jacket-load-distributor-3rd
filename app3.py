@@ -166,11 +166,11 @@ min_targets = JACKETS[jacket_id][case]
 st.subheader("Pressure Input (bar)")
 col1, col2 = st.columns(2)
 with col1:
-    pA = st.number_input("BP (A)", min_value=0.0, step=0.1)
-    pB = st.number_input("BQ (B)", min_value=0.0, step=0.1)
+    pA = st.number_input("BP (A)", min_value=0.0, step=10)
+    pB = st.number_input("BQ (B)", min_value=0.0, step=10)
 with col2:
-    pC = st.number_input("AQ (C)", min_value=0.0, step=0.1)
-    pD = st.number_input("AP (D)", min_value=0.0, step=0.1)
+    pC = st.number_input("AQ (C)", min_value=0.0, step=10)
+    pD = st.number_input("AP (D)", min_value=0.0, step=10)
 
 pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
 
