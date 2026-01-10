@@ -156,7 +156,7 @@ components.html(f"""
 </div>
 """, height=60)
 
-st.title("JKT Levelling")
+st.title("JKT Levelling ⚖️")
 st.caption("Le Treport OWF - DEME OFFSHORE")
 
 # ----------------------------
