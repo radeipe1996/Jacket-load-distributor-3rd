@@ -445,9 +445,17 @@ THEORETICAL_STROKE = {
 }
 
 # ----------------------------
-# HINT BUTTON
+# HINT BUTTON (TOGGLE)
 # ----------------------------
+if "show_hint" not in st.session_state:
+    st.session_state["show_hint"] = False
+
 if st.button("💡 Hint"):
+    # Toggle hint visibility
+    st.session_state["show_hint"] = not st.session_state["show_hint"]
+
+# Display or hide hint based on session state
+if st.session_state["show_hint"]:
     stroke = THEORETICAL_STROKE.get(jacket_id, None)
     if stroke:
         st.info(
