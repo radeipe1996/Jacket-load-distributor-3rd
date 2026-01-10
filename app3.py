@@ -154,7 +154,7 @@ components.html(f"""
 <div style="text-align:center; margin-bottom:12px;">
     <img src="https://nigerianbelgian.org/wp-content/uploads/2025/08/DEME-Group.png" style="width:200px;"/>
 </div>
-""", height=50)
+""", height=60)
 
 st.title("⚖️ JKT Load Distribution")
 st.caption("Le Treport OWF - DEME OFFSHORE")
