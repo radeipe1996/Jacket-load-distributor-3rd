@@ -101,19 +101,19 @@ LEG_LABELS = {
 # ----------------------------
 from datetime import datetime, timezone
 
-def csv_value(v):
-    return "Not checked" if v is None else v
+def save_pressures(jacket_id, case, pressures):
+    now = datetime.now().strftime("%d/%m/%y %H:%M:%S")
 
-new_row = {
-    "Jacket ID": jacket_id,
-    "Case": case,
-    "Date Time (UTC)": now,
-    "BP (A)": csv_value(pressures["A"]),
-    "BQ (B)": csv_value(pressures["B"]),
-    "AQ (C)": csv_value(pressures["C"]),
-    "AP (D)": csv_value(pressures["D"]),
-    "Comment": ""
-}
+    new_row = {
+        "Jacket ID": jacket_id,
+        "Case": case,
+        "Date Time (UTC)": now,
+        "BP (A)": pressures["A"],
+        "BQ (B)": pressures["B"],
+        "AQ (C)": pressures["C"],
+        "AP (D)": pressures["D"],
+        "Comment": ""
+    }
 
     if os.path.exists(REGISTER_FILE):
         df = pd.read_csv(REGISTER_FILE)
@@ -130,22 +130,18 @@ def load_register():
     return pd.DataFrame()
 
 def leg_box(label, pressure, total_pressure, minimum):
-    if pressure is None:
-        return f"""
-        <div style="
-            background-color:#7f8c8d;
-            color:white;
-            padding:12px;
-            border-radius:12px;
-            text-align:center;
-            font-size:14px;
-            min-height:90px;">
-            <strong>{label}</strong><br>
-            <span style="font-size:13px;">Not checked</span>
-        </div>
-        """
+    """
+    label: leg label
+    pressure: actual input pressure in bar
+    total_pressure: sum of all leg pressures (for % calculation)
+    minimum: minimum % required
+    """
+    if total_pressure > 0:
+        percentage = (pressure / total_pressure) * 100
+    else:
+        percentage = 0
 
-    percentage = (pressure / total_pressure) * 100 if total_pressure > 0 else 0
+    # Color based on meeting minimum %
     color = "#2ecc71" if percentage >= minimum else "#e74c3c"
 
     return f"""
@@ -193,35 +189,14 @@ min_targets = JACKETS[jacket_id][case]
 # PRESSURE INPUTS
 # ----------------------------
 st.subheader("Pressure Input (bar)")
-
-def pressure_input(label, key):
-    mode = st.selectbox(
-        label,
-        ["Checked", "Not checked"],
-        key=f"{key}_mode"
-    )
-
-    if mode == "Checked":
-        value = st.number_input(
-            f"{label} value",
-            min_value=0.0,
-            step=10.0,
-            format="%.0f",
-            key=f"{key}_value"
-        )
-        return value
-    else:
-        return None  # ← important
-
-
 col1, col2 = st.columns(2)
 
 with col1:
-    pA = pressure_input("BP (A)", "A")
-    pB = pressure_input("BQ (B)", "B")
+    pA = st.number_input("BP (A)", min_value=0.0, step=10.0, format="%.0f")
+    pB = st.number_input("BQ (B)", min_value=0.0, step=10.0, format="%.0f")
 with col2:
-    pC = pressure_input("AQ (C)", "C")
-    pD = pressure_input("AP (D)", "D")
+    pC = st.number_input("AQ (C)", min_value=0.0, step=10.0, format="%.0f")
+    pD = st.number_input("AP (D)", min_value=0.0, step=10.0, format="%.0f")
 
 pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
 
@@ -229,17 +204,11 @@ pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
 # ----------------------------
 # CALCULATIONS
 # ----------------------------
-valid_pressures = {k: v for k, v in pressures.items() if v is not None}
-
-total_pressure = sum(valid_pressures.values())
-
+total_pressure = sum(pressures.values())
 if total_pressure > 0:
-    percentages = {
-        k: (v / total_pressure) * 100
-        for k, v in valid_pressures.items()
-    }
+    percentages = {k: (v / total_pressure) * 100 for k, v in pressures.items()}
 else:
-    percentages = {}
+    percentages = {k: 0 for k in pressures}
 
 # ----------------------------
 # RESULTS
@@ -408,9 +377,8 @@ components.html(html_layout, height=330)
 # WARNINGS
 # ----------------------------
 failed = [
-    LEG_LABELS[k]
-    for k, v in pressures.items()
-    if v is not None and percentages.get(k, 0) < min_targets[k]
+    LEG_LABELS[k] for k in percentages
+    if percentages[k] < min_targets[k]
 ]
 
 if failed:
