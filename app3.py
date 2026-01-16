@@ -7,6 +7,7 @@ import time
 from io import StringIO
 from github import Github
 import base64
+pip install PyGithub
 
 # ----------------------------
 # PAGE CONFIG
