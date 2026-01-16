@@ -1,13 +1,9 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime
 import os
 import time
-from io import StringIO
-from github import Github
-import base64
-pip install PyGithub
 
 # ----------------------------
 # PAGE CONFIG
@@ -17,57 +13,16 @@ st.set_page_config(
     layout="centered"
 )
 
-# ----------------------------
-# SESSION STATE INIT
-# ----------------------------
 if "show_register" not in st.session_state:
     st.session_state["show_register"] = False
+
 if "delete_last" not in st.session_state:
     st.session_state["delete_last"] = False
-if "last_saved_index" not in st.session_state:
-    st.session_state["last_saved_index"] = None
-if "can_delete_last" not in st.session_state:
-    st.session_state["can_delete_last"] = False
-if "register_placeholder" not in st.session_state:
-    st.session_state["register_placeholder"] = st.empty()
-if "show_hint" not in st.session_state:
-    st.session_state["show_hint"] = False
-
-# ----------------------------
-# CONFIG & GITHUB
-# ----------------------------
-REGISTER_FILE = "pressure_register.csv"
-
-GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-GITHUB_REPO = st.secrets["GITHUB_REPO"]
-GITHUB_BRANCH = st.secrets.get("GITHUB_BRANCH", "main")
-REGISTER_PATH = st.secrets.get("REGISTER_PATH", "pressure_register.csv")
-
-g = Github(GITHUB_TOKEN)
-repo = g.get_repo(GITHUB_REPO)
-
-def github_get_file(path=REGISTER_PATH, branch=GITHUB_BRANCH):
-    try:
-        file = repo.get_contents(path, ref=branch)
-        content = base64.b64decode(file.content).decode("utf-8")
-        return content, file.sha
-    except Exception:
-        return None, None
-
-def github_push_file(content, sha=None, message="Update register", branch=GITHUB_BRANCH):
-    try:
-        if sha:
-            repo.update_file(REGISTER_PATH, message, content, sha, branch=branch)
-        else:
-            repo.create_file(REGISTER_PATH, message, content, branch=branch)
-        return True
-    except Exception as e:
-        st.error(f"GitHub push failed: {e}")
-        return False
-
+    
 # ----------------------------
 # DATA
 # ----------------------------
+REGISTER_FILE = "pressure_register.csv"
 
 JACKETS = {
     "G05": {"EAC":{"A":11.6,"B":11.4,"C":22.9,"D":12.3}, "OBS":{"A":17.3,"B":20.1,"C":22.9,"D":17.0}},
@@ -142,21 +97,13 @@ LEG_LABELS = {
 }
 
 # ----------------------------
-# HELPER FUNCTIONS
+# FUNCTIONS
 # ----------------------------
-def load_register():
-    content, _ = github_get_file()
-    if content:
-        try:
-            return pd.read_csv(StringIO(content))
-        except Exception as e:
-            st.warning(f"Failed to parse CSV from GitHub: {e}")
-    if os.path.exists(REGISTER_FILE):
-        return pd.read_csv(REGISTER_FILE)
-    return pd.DataFrame()
+from datetime import datetime, timezone
 
-def save_pressures(jacket_id, case, pressures, comment=""):
-    now = datetime.now(timezone.utc).strftime("%d/%m/%y %H:%M:%S")
+def save_pressures(jacket_id, case, pressures):
+    now = datetime.now().strftime("%d/%m/%y %H:%M:%S")
+
     new_row = {
         "Jacket ID": jacket_id,
         "Case": case,
@@ -165,23 +112,31 @@ def save_pressures(jacket_id, case, pressures, comment=""):
         "BQ (B)": pressures["B"],
         "AQ (C)": pressures["C"],
         "AP (D)": pressures["D"],
-        "Comment": comment
+        "Comment": ""
     }
 
-    df = load_register()
-    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    if os.path.exists(REGISTER_FILE):
+        df = pd.read_csv(REGISTER_FILE)
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    else:
+        df = pd.DataFrame([new_row])
 
-    # Save locally
     df.to_csv(REGISTER_FILE, index=False)
-
-    # Save to GitHub
-    csv_content = df.to_csv(index=False)
-    _, sha = github_get_file()
-    github_push_file(csv_content, sha, f"Add pressures for {jacket_id}")
-
     return len(df) - 1
 
+def load_register():
+    if os.path.exists(REGISTER_FILE):
+        return pd.read_csv(REGISTER_FILE)
+    return pd.DataFrame()
+
 def leg_box(label, pressure, total_pressure, minimum_pct):
+    """
+    label: leg label
+    pressure: actual input pressure in bar
+    total_pressure: sum of all leg pressures
+    minimum_pct: minimum % required for this leg
+    """
+
     if total_pressure > 0:
         percentage = (pressure / total_pressure) * 100
         pmin = total_pressure * (minimum_pct / 100)
@@ -189,7 +144,7 @@ def leg_box(label, pressure, total_pressure, minimum_pct):
         percentage = 0
         pmin = 0
 
-    # Color logic
+    # Color logic (as requested earlier: yellow default, red if below min)
     color = "#2ecc71" if percentage >= minimum_pct else "#e74c3c"
 
     return f"""
@@ -239,16 +194,25 @@ min_targets = JACKETS[jacket_id][case]
 # ----------------------------
 st.subheader("Pressure Input (bar)")
 col1, col2 = st.columns(2)
+
 with col1:
     pA = st.number_input("BP (A)", min_value=0.0, step=10.0, format="%.0f")
     pB = st.number_input("BQ (B)", min_value=0.0, step=10.0, format="%.0f")
 with col2:
     pC = st.number_input("AQ (C)", min_value=0.0, step=10.0, format="%.0f")
     pD = st.number_input("AP (D)", min_value=0.0, step=10.0, format="%.0f")
-pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
-total_pressure = sum(pressures.values())
-percentages = {k: (v / total_pressure) * 100 if total_pressure else 0 for k, v in pressures.items()}
 
+pressures = {"A": pA, "B": pB, "C": pC, "D": pD}
+
+
+# ----------------------------
+# CALCULATIONS
+# ----------------------------
+total_pressure = sum(pressures.values())
+if total_pressure > 0:
+    percentages = {k: (v / total_pressure) * 100 for k, v in pressures.items()}
+else:
+    percentages = {k: 0 for k in pressures}
 
 # ----------------------------
 # RESULTS
@@ -256,24 +220,56 @@ percentages = {k: (v / total_pressure) * 100 if total_pressure else 0 for k, v i
 st.metric("Total Pressure (bar)", f"{total_pressure:.2f}")
 
 # ----------------------------
-# DATA LOGGING
+# DATA LOGGING (IMMEDIATELY BELOW INPUT)
 # ----------------------------
 st.subheader("Data Logging")
 col_save, col_view = st.columns(2)
 
+# Track last saved record in session state
+if "last_saved_index" not in st.session_state:
+    st.session_state["last_saved_index"] = None
+
+if "can_delete_last" not in st.session_state:
+    st.session_state["can_delete_last"] = False
+
+# Placeholder for the register table
+if "register_placeholder" not in st.session_state:
+    st.session_state["register_placeholder"] = st.empty()
+
+# --- SAVE PRESSURES BUTTON ---
 with col_save:
     if st.button("💾 Save Pressures", use_container_width=True):
-        idx = save_pressures(jacket_id, case, pressures)
-        st.session_state["last_saved_index"] = idx
-        st.session_state["can_delete_last"] = True
+        # ✅ TRUE UTC TIME
+        now = datetime.now(timezone.utc).strftime("%d/%m/%y %H:%M:%S")
+
+        new_row = {
+            "Jacket ID": jacket_id,
+            "Case": case,
+            "Date Time (UTC)": now,   # ✅ CORRECT HEADER
+            "BP (A)": pressures["A"],
+            "BQ (B)": pressures["B"],
+            "AQ (C)": pressures["C"],
+            "AP (D)": pressures["D"],
+            "Comment": ""
+        }
+
+        if os.path.exists(REGISTER_FILE):
+            df = pd.read_csv(REGISTER_FILE)
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        else:
+            df = pd.DataFrame([new_row])
+
+        df.to_csv(REGISTER_FILE, index=False)
+        st.session_state["last_saved_index"] = len(df) - 1
+        st.session_state["can_delete_last"] = True   
         msg = st.empty()
         msg.success("Pressures saved successfully!")
         time.sleep(1)
         msg.empty()
 
-# Comment for last saved record
+# --- COMMENT INPUT FOR LAST SAVED RECORD ---
 if st.session_state.get("last_saved_index") is not None:
-    df = load_register()
+    df = pd.read_csv(REGISTER_FILE)
     idx = st.session_state["last_saved_index"]
     comment = st.text_input(
         "Add a comment for last record:",
@@ -282,10 +278,6 @@ if st.session_state.get("last_saved_index") is not None:
     if st.button("💬 Save Comment"):
         df.at[idx, "Comment"] = comment
         df.to_csv(REGISTER_FILE, index=False)
-        # Push updated CSV to GitHub
-        csv_content = df.to_csv(index=False)
-        _, sha = github_get_file()
-        github_push_file(csv_content, sha, f"Update comment for {jacket_id}")
         msg = st.empty()
         msg.success("Comment saved!")
         time.sleep(1)
@@ -296,12 +288,14 @@ if st.session_state.get("last_saved_index") is not None:
 # ----------------------------
 placeholder = st.session_state.get("register_placeholder", st.empty())
 
+# Toggle register visibility
 with col_view:
     if st.button("📋 Register", use_container_width=True):
         st.session_state["show_register"] = not st.session_state.get("show_register", False)
 
+# Load CSV if register is visible
 if st.session_state.get("show_register", False):
-    df = load_register()
+    df = load_register()  # Always load the CSV, even on fresh start
     placeholder.subheader("Pressure Register")
 
     if df.empty:
@@ -309,20 +303,24 @@ if st.session_state.get("show_register", False):
     else:
         placeholder.dataframe(df, use_container_width=True, hide_index=True)
 
+    # --- DELETE LAST MEASUREMENT BUTTON ---
+    # Only show delete button if user saved a new record this session
     if st.session_state.get("can_delete_last", False) and not df.empty:
         if st.button("🗑️ Delete Last Measurement"):
-            df = df.iloc[:-1]
+            df = df.iloc[:-1]  # Remove last row
             df.to_csv(REGISTER_FILE, index=False)
-            csv_content = df.to_csv(index=False)
-            _, sha = github_get_file()
-            github_push_file(csv_content, sha, f"Delete last measurement for {jacket_id}")
+
+            # Disable further deletion until next save
             st.session_state["last_saved_index"] = None
             st.session_state["can_delete_last"] = False
+
+            # Flash message
             msg = st.empty()
             msg.success("Last measurement deleted successfully!")
             time.sleep(1)
             msg.empty()
-            # Refresh table
+
+            # Refresh placeholder table
             df = load_register()
             placeholder.empty()
             placeholder.subheader("Pressure Register")
