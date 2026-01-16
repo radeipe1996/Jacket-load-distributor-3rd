@@ -485,3 +485,35 @@ if st.session_state["show_hint"]:
         )
     else:
         st.warning("No theoretical stroke data available for this jacket.")
+
+# ----------------------------
+# CLAMPS PRESSURES BUTTON (SECOND HINT)
+# ----------------------------
+
+CLUSTER_PRESSURES = {
+    "CL 1": {"AP": 162, "AQ": 339, "BP": 0, "BQ": 0},
+    "CL 2": {"AP": 164, "AQ": 384, "BP": 0, "BQ": 0},
+    "CL 3": {"AP": 152, "AQ": 402, "BP": 0, "BQ": 0}
+}
+
+if "show_clamp_hint" not in st.session_state:
+    st.session_state["show_clamp_hint"] = False
+
+if st.button("🗜️ Clamps Pressures"):
+    # Toggle clamp hint visibility
+    st.session_state["show_clamp_hint"] = not st.session_state["show_clamp_hint"]
+
+# Display clamp pressures if toggled
+if st.session_state["show_clamp_hint"]:
+    cluster = JACKETS[jacket_id]["Cluster"]
+    pressures = CLUSTER_PRESSURES.get(cluster, None)
+    if pressures:
+        st.info(
+            f"Recommended clamp pressures for Cluster {cluster}:\n\n"
+            f"BP (A): {pressures['BP']} bar\n"
+            f"BQ (B): {pressures['BQ']} bar\n"
+            f"AQ (C): {pressures['AQ']} bar\n"
+            f"AP (D): {pressures['AP']} bar"
+        )
+    else:
+        st.warning("No clamp pressure data available for this cluster.")
