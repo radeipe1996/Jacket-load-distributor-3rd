@@ -145,7 +145,7 @@ def leg_box(label, pressure, total_pressure, minimum_pct):
         pmin = 0
 
     # Color logic (as requested earlier: yellow default, red if below min)
-    color = "#f1c40f" if percentage >= minimum_pct else "#e74c3c"
+    color = "#2ecc71" if percentage >= minimum_pct else "#e74c3c"
 
     return f"""
     <div style="
