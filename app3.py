@@ -2,8 +2,9 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 from datetime import datetime
-import os
 import time
+import base64
+import requests
 
 # ----------------------------
 # PAGE CONFIG
@@ -22,7 +23,6 @@ if "delete_last" not in st.session_state:
 # ----------------------------
 # DATA
 # ----------------------------
-REGISTER_FILE = "pressure_register.csv"
 
 JACKETS = {
     "G05": {"EAC":{"A":11.6,"B":11.4,"C":22.9,"D":12.3}, "OBS":{"A":17.3,"B":20.1,"C":22.9,"D":17.0}},
@@ -97,6 +97,40 @@ LEG_LABELS = {
 }
 
 # ----------------------------
+# GITHUB CSV PERSISTENCE
+# ----------------------------
+
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+GITHUB_REPO = st.secrets["GITHUB_REPO"]
+GITHUB_BRANCH = st.secrets["GITHUB_BRANCH"]
+REGISTER_PATH = st.secrets["REGISTER_PATH"]
+
+HEADERS = {
+    "Authorization": f"token {GITHUB_TOKEN}",
+    "Accept": "application/vnd.github.v3+json"
+}
+
+def github_get_file():
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{REGISTER_PATH}"
+    r = requests.get(url, headers=HEADERS, params={"ref": GITHUB_BRANCH})
+    if r.status_code == 200:
+        content = base64.b64decode(r.json()["content"]).decode("utf-8")
+        sha = r.json()["sha"]
+        return content, sha
+    return None, None
+
+def github_push_file(content, sha, message):
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{REGISTER_PATH}"
+    payload = {
+        "message": message,
+        "content": base64.b64encode(content.encode()).decode(),
+        "branch": GITHUB_BRANCH
+    }
+    if sha:
+        payload["sha"] = sha
+    requests.put(url, headers=HEADERS, json=payload)
+    
+# ----------------------------
 # FUNCTIONS
 # ----------------------------
 from datetime import datetime, timezone
@@ -125,8 +159,9 @@ def save_pressures(jacket_id, case, pressures):
     return len(df) - 1
 
 def load_register():
-    if os.path.exists(REGISTER_FILE):
-        return pd.read_csv(REGISTER_FILE)
+    content, _ = github_get_file()
+    if content:
+        return pd.read_csv(pd.compat.StringIO(content))
     return pd.DataFrame()
 
 def leg_box(label, pressure, total_pressure, minimum_pct):
@@ -253,15 +288,16 @@ with col_save:
             "Comment": ""
         }
 
-        if os.path.exists(REGISTER_FILE):
-            df = pd.read_csv(REGISTER_FILE)
-            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-        else:
-            df = pd.DataFrame([new_row])
-
-        df.to_csv(REGISTER_FILE, index=False)
+            df = load_register()
+            df.at[idx, "Comment"] = comment
+            
+            csv_content = df.to_csv(index=False)
+            _, sha = github_get_file()
+            github_push_file(csv_content, sha, "Update comment")
+        
         st.session_state["last_saved_index"] = len(df) - 1
         st.session_state["can_delete_last"] = True   
+        
         msg = st.empty()
         msg.success("Pressures saved successfully!")
         time.sleep(1)
@@ -307,8 +343,12 @@ if st.session_state.get("show_register", False):
     # Only show delete button if user saved a new record this session
     if st.session_state.get("can_delete_last", False) and not df.empty:
         if st.button("🗑️ Delete Last Measurement"):
-            df = df.iloc[:-1]  # Remove last row
-            df.to_csv(REGISTER_FILE, index=False)
+            df = load_register()
+            df = df.iloc[:-1]
+            
+            csv_content = df.to_csv(index=False)
+            _, sha = github_get_file()
+            github_push_file(csv_content, sha, "Delete last pressure record")
 
             # Disable further deletion until next save
             st.session_state["last_saved_index"] = None
