@@ -129,34 +129,38 @@ def load_register():
         return pd.read_csv(REGISTER_FILE)
     return pd.DataFrame()
 
-def leg_box(label, pressure, total_pressure, minimum):
+def leg_box(label, pressure, total_pressure, minimum_pct):
     """
     label: leg label
     pressure: actual input pressure in bar
-    total_pressure: sum of all leg pressures (for % calculation)
-    minimum: minimum % required
+    total_pressure: sum of all leg pressures
+    minimum_pct: minimum % required for this leg
     """
+
     if total_pressure > 0:
         percentage = (pressure / total_pressure) * 100
+        pmin = total_pressure * (minimum_pct / 100)
     else:
         percentage = 0
+        pmin = 0
 
-    # Color based on meeting minimum %
-    color = "#2ecc71" if percentage >= minimum else "#e74c3c"
+    # Color logic (as requested earlier: yellow default, red if below min)
+    color = "#f1c40f" if percentage >= minimum_pct else "#e74c3c"
 
     return f"""
     <div style="
         background-color:{color};
-        color:white;
+        color:black;
         padding:12px;
         border-radius:12px;
         text-align:center;
         font-size:14px;
-        min-height:90px;">
+        min-height:110px;">
         <strong>{label}</strong><br>
         {percentage:.1f}%<br>
-        <span style="font-size:12px;">Min: {minimum:.1f}%</span><br>
-        <span style="font-size:14px;">P: {pressure:.0f} bar</span>
+        <span style="font-size:12px;">Min: {minimum_pct:.1f}%</span><br>
+        <span style="font-size:14px;">P: {pressure:.0f} bar</span><br>
+        <span style="font-size:12px;">Pmin: {pmin:.0f} bar</span>
     </div>
     """
 
