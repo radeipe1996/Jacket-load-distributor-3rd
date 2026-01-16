@@ -509,7 +509,7 @@ if st.session_state["show_clamp_hint"]:
     pressures = CLUSTER_PRESSURES.get(cluster, None)
     if pressures:
         st.info(
-            f"Recommended clamp pressures for Cluster {cluster}:\n\n"
+            f"Required clamp pressures (OBS 3/4 clamps) for Cluster {cluster}:\n\n"
             f"BP (A): {pressures['BP']} bar\n"
             f"BQ (B): {pressures['BQ']} bar\n"
             f"AQ (C): {pressures['AQ']} bar\n"
