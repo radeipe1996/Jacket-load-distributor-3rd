@@ -89,6 +89,25 @@ JACKETS = {
     "G01": {"EAC":{"A":11.6,"B":11.4,"C":22.9,"D":12.3}, "OBS":{"A":17.3,"B":20.1,"C":22.9,"D":17.0}},
 }
 
+CLUSTERS = {
+    "J04": "CL 2", "J05": "CL 2", "K04": "CL 2", "L05": "CL 2",
+    "H05": "CL 1", "M04": "CL 2", "G05": "CL 1", "L04": "CL 2",
+    "M05": "CL 2", "F05": "CL 3", "M07": "CL 2", "M06": "CL 2",
+    "L06": "CL 2", "D05": "CL 3", "L07": "CL 2", "E05": "CL 3",
+    "H07": "CL 2", "J07": "CL 2", "K07": "CL 2", "K06": "CL 2",
+    "K05": "CL 2", "G07": "CL 2", "F06": "CL 2", "H06": "CL 2",
+    "G06": "CL 2", "J06": "CL 2", "E06": "CL 1", "E07": "CL 1",
+    "F07": "CL 1", "D06": "CL 2", "D07": "CL 1", "E04": "CL 3",
+    "G04": "CL 3", "M01": "CL 1", "A04": "CL 1", "A02": "CL 3",
+    "A03": "CL 1", "L03": "CL 1", "J01": "CL 3", "M02": "CL 3",
+    "L02": "CL 3", "K01": "CL 2", "M03": "CL 2", "L01": "CL 2",
+    "H04": "CL 2", "G02": "CL 2", "E03": "CL 2", "H02": "CL 2",
+    "H01": "CL 2", "B04": "CL 2", "D04": "CL 2", "B03": "CL 1",
+    "C04": "CL 2", "B02": "CL 1", "E02": "CL 1", "D03": "CL 1",
+    "C02": "CL 1", "F02": "CL 1", "C03": "CL 1", "E01": "CL 1",
+    "F01": "CL 1", "G01": "CL 1"
+}
+
 LEG_LABELS = {
     "A": "BP (A)",
     "B": "BQ (B)",
@@ -151,11 +170,11 @@ def leg_box(label, pressure, total_pressure, minimum_pct):
     <div style="
         background-color:{color};
         color:black;
-        padding:12px;
+        padding:10px;
         border-radius:12px;
         text-align:center;
         font-size:14px;
-        min-height:110px;">
+        min-height:100px;">
         <strong>{label}</strong><br>
         {percentage:.1f}%<br>
         <span style="font-size:12px;">Min: {minimum_pct:.1f}%</span><br>
@@ -334,21 +353,35 @@ if st.session_state.get("show_register", False):
 # ----------------------------
 st.subheader("Jacket Visualization")
 
+# Get the cluster for the current selection
+current_cluster = CLUSTERS.get(jacket_id, "N/A")
+
 html_layout = f"""
 <div style="max-width:360px;margin:auto;font-family:Arial;">
 
-    <!-- Jacket ID at the top -->
     <div style="
-        margin-bottom:14px;
+        margin-bottom:8px;
         background-color:#34495e;
         color:white;
-        padding:12px;
-        border-radius:12px;
+        padding:10px;
+        border-radius:12px 12px 0 0;
         text-align:center;">
         <strong>{jacket_id}</strong>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<div style="
+        margin-bottom:8px;
+        background-color:#34495e;
+        color:white;
+        padding:4px;
+        border-radius:0 0 10px 10px;
+        text-align:center;
+        font-size:12px;
+        font-weight:bold;">
+        {current_cluster}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
 
         <div style="display:flex;align-items:center;gap:8px;">
             <div style="
@@ -357,8 +390,8 @@ html_layout = f"""
                 padding:4px;
                 border-radius:6px;
                 font-size:11px;
-                width:34px;
-                height:34px;
+                width:38px;
+                height:38px;
                 display:flex;
                 align-items:center;
                 justify-content:center;">
@@ -371,11 +404,10 @@ html_layout = f"""
             {leg_box("AP (D)", pressures["D"], total_pressure, min_targets["D"])}
             {leg_box("AQ (C)", pressures["C"], total_pressure, min_targets["C"])}
 
-
     </div>
 </div>
 """
-components.html(html_layout, height=330)
+components.html(html_layout, height=360)
 
 # ----------------------------
 # WARNINGS
