@@ -170,16 +170,16 @@ def leg_box(label, pressure, total_pressure, minimum_pct):
     <div style="
         background-color:{color};
         color:black;
-        padding:12px;
-        border-radius:12px;
+        padding:8px;
+        border-radius:10px;
         text-align:center;
-        font-size:14px;
-        min-height:110px;">
+        font-size:13px;
+        min-height:100px;">
         <strong>{label}</strong><br>
         {percentage:.1f}%<br>
-        <span style="font-size:12px;">Min: {minimum_pct:.1f}%</span><br>
-        <span style="font-size:14px;">P: {pressure:.0f} bar</span><br>
-        <span style="font-size:12px;">Pmin: {pmin:.0f} bar</span>
+        <span style="font-size:11px;">Min: {minimum_pct:.1f}%</span><br>
+        <span style="font-size:13px;">P: {pressure:.0f} bar</span><br>
+        <span style="font-size:11px;">Pmin: {pmin:.0f} bar</span>
     </div>
     """
 
