@@ -376,7 +376,7 @@ html_layout = f"""
         padding:6px;
         border-radius:0 0 8px 8px;
         text-align:center;
-        font-size:14px;
+        font-size:10px;
         font-weight:bold;">
         {current_cluster}
     </div>
