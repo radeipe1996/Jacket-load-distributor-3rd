@@ -381,7 +381,7 @@ html_layout = f"""
         {current_cluster}
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
 
         <div style="display:flex;align-items:center;gap:8px;">
             <div style="
