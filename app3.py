@@ -371,7 +371,7 @@ html_layout = f"""
 
 <div style="
         margin-bottom:8px;
-        background-color:#2980b9;
+        background-color:#34495e;
         color:white;
         padding:4px;
         border-radius:0 0 10px 10px;
