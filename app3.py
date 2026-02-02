@@ -370,17 +370,14 @@ html_layout = f"""
     </div>
 
 <div style="
-        margin-bottom:12px;
+        margin-bottom:8px;
         background-color:#2980b9;
         color:white;
-        padding:4px 12px;       /* Added more horizontal padding for look */
-        border-radius:20px;     /* Pill shape looks better for narrow boxes */
+        padding:4px;
+        border-radius:0 0 10px 10px;
         text-align:center;
         font-size:12px;
-        font-weight:bold;
-        width: fit-content;     /* THIS makes it narrower */
-        margin: 0 auto;         /* THIS centers the narrower box */
-        border: 1px solid rgba(255,255,255,0.2);">
+        font-weight:bold;">
         {current_cluster}
     </div>
 
