@@ -390,8 +390,8 @@ html_layout = f"""
                 padding:4px;
                 border-radius:6px;
                 font-size:11px;
-                width:30px;
-                height:30px;
+                width:38px;
+                height:38px;
                 display:flex;
                 align-items:center;
                 justify-content:center;">
