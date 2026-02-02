@@ -374,7 +374,7 @@ html_layout = f"""
         background-color:#34495e;
         color:white;
         padding:6px;
-        border-radius:0 0 12px 12px;
+        border-radius:0 0 8px 8px;
         text-align:center;
         font-size:14px;
         font-weight:bold;">
