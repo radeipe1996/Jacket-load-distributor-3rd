@@ -225,27 +225,23 @@ st.metric("Total Pressure (bar)", f"{total_pressure:.2f}")
 st.subheader("Data Logging")
 col_save, col_view = st.columns(2)
 
-# Track last saved record in session state
+# Initialize session state keys
 if "last_saved_index" not in st.session_state:
     st.session_state["last_saved_index"] = None
-
 if "can_delete_last" not in st.session_state:
     st.session_state["can_delete_last"] = False
-
-# Placeholder for the register table
-if "register_placeholder" not in st.session_state:
-    st.session_state["register_placeholder"] = st.empty()
+if "show_comment_input" not in st.session_state:
+    st.session_state["show_comment_input"] = False
 
 # --- SAVE PRESSURES BUTTON ---
 with col_save:
     if st.button("💾 Save Pressures", use_container_width=True):
-        # ✅ TRUE UTC TIME
         now = datetime.now(timezone.utc).strftime("%d/%m/%y %H:%M:%S")
 
         new_row = {
             "Jacket ID": jacket_id,
             "Case": case,
-            "Date Time (UTC)": now,   # ✅ CORRECT HEADER
+            "Date Time (UTC)": now,
             "BP (A)": pressures["A"],
             "BQ (B)": pressures["B"],
             "AQ (C)": pressures["C"],
@@ -260,28 +256,32 @@ with col_save:
             df = pd.DataFrame([new_row])
 
         df.to_csv(REGISTER_FILE, index=False)
+        
+        # Update State
         st.session_state["last_saved_index"] = len(df) - 1
         st.session_state["can_delete_last"] = True   
-        msg = st.empty()
-        msg.success("Pressures saved successfully!")
-        time.sleep(1)
-        msg.empty()
+        st.session_state["show_comment_input"] = True  # <--- Trigger the box
+        
+        st.success("Pressures saved! Please add a comment below.")
 
-# --- COMMENT INPUT FOR LAST SAVED RECORD ---
-if st.session_state.get("last_saved_index") is not None:
-    df = pd.read_csv(REGISTER_FILE)
-    idx = st.session_state["last_saved_index"]
-    comment = st.text_input(
-        "Add a comment for last record:",
-        value=df.at[idx, "Comment"]
-    )
-    if st.button("💬 Save Comment"):
-        df.at[idx, "Comment"] = comment
-        df.to_csv(REGISTER_FILE, index=False)
-        msg = st.empty()
-        msg.success("Comment saved!")
-        time.sleep(1)
-        msg.empty()
+# --- DYNAMIC COMMENT INPUT ---
+if st.session_state["show_comment_input"]:
+    st.markdown("---")
+    with st.container():
+        idx = st.session_state["last_saved_index"]
+        # Use a key to ensure the widget state is preserved during typing
+        comment_text = st.text_input("📝 Add a comment for this record:", key="current_comment_box")
+        
+        if st.button("✅ Confirm & Save Comment", type="primary"):
+            df = pd.read_csv(REGISTER_FILE)
+            df.at[idx, "Comment"] = comment_text
+            df.to_csv(REGISTER_FILE, index=False)
+            
+            st.session_state["show_comment_input"] = False # <--- Hide after saving
+            st.success("Comment linked to record!")
+            time.sleep(1)
+            st.rerun()
+    st.markdown("---")
 
 # ----------------------------
 # REGISTER DISPLAY AND DELETE
