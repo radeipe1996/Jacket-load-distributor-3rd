@@ -370,8 +370,8 @@ html_layout = f"""
     </div>
 
     <div style="
-        margin-bottom:14px;
-        background-color:#2980b9;
+        margin-bottom:8px;
+        background-color:#34495e;
         color:white;
         padding:6px;
         border-radius:0 0 12px 12px;
