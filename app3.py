@@ -369,15 +369,18 @@ html_layout = f"""
         <strong>{jacket_id}</strong>
     </div>
 
-    <div style="
-        margin-bottom:8px;
-        background-color:#34495e;
+<div style="
+        margin-bottom:12px;
+        background-color:#2980b9;
         color:white;
-        padding:6px;
-        border-radius:0 0 8px 8px;
+        padding:4px 12px;       /* Added more horizontal padding for look */
+        border-radius:20px;     /* Pill shape looks better for narrow boxes */
         text-align:center;
-        font-size:14px;
-        font-weight:bold;">
+        font-size:12px;
+        font-weight:bold;
+        width: fit-content;     /* THIS makes it narrower */
+        margin: 0 auto;         /* THIS centers the narrower box */
+        border: 1px solid rgba(255,255,255,0.2);">
         {current_cluster}
     </div>
 
